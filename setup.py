@@ -17,10 +17,10 @@
 from setuptools import setup
 
 
-setup(name='eucio',
+setup(name='DeploymentManager',
       version='0.1',
       description='Eucalyptus Configuration Input/Output',
-      url='https://github.com/shaon/eucio.git',
+      url='https://github.com/eucalyptus/DeploymentManager.git',
       license='Apache License 2.0',
       packages=['eucio'],
       install_requires=[],
