@@ -1,4 +1,4 @@
-eucio
-=====
+DeploymentManager
+================
 
-Eucalyptus Configuration Input/Output
+Configuration Management Tool for Eucalyptus Deployment
