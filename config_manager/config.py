@@ -36,8 +36,8 @@ class Config(object):
         Creates a base Config() object. This object is a basic python
         representation of a textual configuration(file). This configuration
         is currently described using JSON. This class provides utilities to
-        read, write, map, save, compare, and map python attributes to a json
-        configuration.
+        read, write, map, save, compare, and validate python attributes to a
+        json configuration.
         :param name: string. The name of this config section
         :param config_file_path: Optional.string. Local path this config obj
                                  should read/write
