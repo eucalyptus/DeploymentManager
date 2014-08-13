@@ -17,11 +17,6 @@
 import json
 
 
-class DeploymentManager(object):
-    def __init__(self):
-        print "none"
-
-
 class Eucalyptus:
     def __init__(self):
         self.log_level = "INFO"
@@ -35,6 +30,17 @@ class Eucalyptus:
         self.enterprise = EnterpriseCert()
         self.node_controllers = NodeControllers()
         self.topology = Topology()
+        self.network = Network()
+        self.system_properties = SystemProperties()
+
+    def add_topology(self, topology):
+        self.topology = topology
+
+    def add_network(self, network):
+        self.network = network
+
+    def add_system_properties(self, system_properties):
+        self.system_properties = system_properties
 
     def to_dict(self):
         return {'log-level': self.log_level,
@@ -46,37 +52,77 @@ class Eucalyptus:
                 'enterprise-repo': self.enterprise_repo,
                 'enterprise': self.enterprise,
                 'nc': self.node_controllers,
-                'topology': self.topology}
+                'topology': self.topology,
+                'network': self.network,
+                'system_properties': self.system_properties}
+
+
+class SystemProperties:
+    def __init__(self, properties=None):
+        self.system_properties = {}
+        if properties:
+            self.system_properties = properties
+
+    def add_property(self, key, value):
+        self.system_properties.update({key: value})
+
+    def to_dict(self):
+        return self.system_properties
+
+
+class Network:
+    def __init__(self, network_json_file=None, network_json=None):
+        self.network = {}
+
+    def to_dict(self):
+        return self.network
 
 
 class Topology:
     def __init__(self):
-        self.clc = "10.111.1.101"
+        self.clc = None
         self.walrus = "10.111.1.101"
         self.user_facing = ["10.111.1.101", "10.111.1.102"]
-        self.clusters = Clusters()
+        self.clusters = {}
+
+    def add_cluster(self, clusters):
+        for cluster in clusters:
+            mycluster = cluster.to_dict()
+            self.clusters.update(mycluster)
+
+    def add_cloud_controller(self, clc):
+        self.clc = clc
 
     def to_dict(self):
-        return {'clc-1': self.clc,
+        return {'clc-1': self.clc.hostname,
                 'walrus': self.walrus,
                 'user-facing': self.user_facing,
                 'clusters': self.clusters}
 
-class Clusters:
-    def __init__(self):
-        self.clusters = {}
 
-    def add_cluster(self, cluster):
-        self.clusters.update()
+class Walrus:
+    def __init__(self, hostname):
+        self.hostname = hostname
 
-    def to_dict(self):
-        return {}
+
+class CloudController:
+    def __init__(self, hostname):
+        self.hostname = hostname
 
 
 class Cluster(object):
-    def __init__(self, name):
+    def __init__(self, name, cc_hostname=None, sc_hostname=None):
         self.name = name
-    
+        self.cc_hostname = cc_hostname
+        self.sc_hostname = sc_hostname
+
+    def to_dict(self):
+        return {
+            self.name: {
+                'cc-1': self.cc_hostname,
+                'sc-1': self.sc_hostname
+            }
+        }
 
 
 class EnterpriseCert:
@@ -88,9 +134,13 @@ class EnterpriseCert:
         return {'clientcert': self.clientcert,
                 'clientkey': self.clientkey}
 
-class Atrributes:
+
+class DefaultAtrributes:
     def __init__(self):
         self.eucalyptus = Eucalyptus()
+
+    def add_eucalyptus(self, eucalyptus):
+        self.eucalyptus = eucalyptus
 
     def to_dict(self):
         return dict(eucalyptus=self.eucalyptus)
@@ -106,11 +156,25 @@ class NodeControllers:
                 'cache-size': self.cache_size}
 
 
+class MidoNet:
+    def __init__(self):
+        self.name = "MidoNet"
+
+    def to_dict(self):
+        return {}
+
+
 class Config:
     def __init__(self):
         self.name = "my-config"
         self.description = "my such config"
-        self.default_attributes = Atrributes()
+        self.default_attributes = {}
+
+    def add_midonet(self, midonet):
+        self.default_attributes.update({'midonet': midonet})
+
+    def add_eucalyptus(self, eucalyptus):
+        self.default_attributes.update({'eucalyptus': eucalyptus})
 
     def to_dict(self):
         return dict(name=self.name,
