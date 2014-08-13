@@ -20,6 +20,7 @@ from pprint import pformat
 from shutil import copyfile
 import difflib
 
+
 class ConfigProperty(object):
     def __init__(self,
                  name,
@@ -136,7 +137,6 @@ class ConfigProperty(object):
             .format(json_name)
 
         def temp_prop_getter(self):
-            print 'getting ' + str(json_name)
             return self._get_json_property(json_name)
 
         def temp_prop_setter(self, newvalue):
@@ -193,7 +193,7 @@ class Config(ConfigProperty):
                  name,
                  description=None,
                  config_file_path=None,
-                 type=None,
+                 objtype=None,
                  version=None,
                  **kwargs):
         """
@@ -212,8 +212,11 @@ class Config(ConfigProperty):
         """
         # Set name and config file path first to allow updating base values
         # from an existing file
-        super(Config, self).__init__(name=name, description=description,
-                                     type=type, version=version, kwargs=kwargs)
+        super(Config, self).__init__(name=name,
+                                     description=description,
+                                     type=objtype,
+                                     version=version,
+                                     kwargs=kwargs)
         self.config_file_path = config_file_path
         self.update_from_file()
         self.default_attributes = {}
