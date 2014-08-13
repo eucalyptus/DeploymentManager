@@ -15,4 +15,26 @@
 # limitations under the License.
 
 
-__version__ = 0.1
+class Cluster(object):
+    def __init__(self, name, cc_hostname=None, sc_hostname=None):
+        self.name = name
+        self.cc_hostname = cc_hostname
+        self.sc_hostname = sc_hostname
+
+    def to_dict(self):
+        return {
+            self.name: {
+                'cc-1': self.cc_hostname,
+                'sc-1': self.sc_hostname
+            }
+        }
+
+
+class NodeControllers:
+    def __init__(self):
+        self.max_cores = 8
+        self.cache_size = 40000
+
+    def to_dict(self):
+        return {'max-cores': self.max_cores,
+                'cache-size': self.cache_size}

@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
 # Copyright 2009-2014 Eucalyptus Systems, Inc.
-
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-
+#
 #    http://www.apache.org/licenses/LICENSE-2.0
-
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,11 +28,12 @@ class Config(object):
     """
     def __init__(self,
                  name,
+                 description=None,
                  config_file_path=None,
                  type=None,
                  version=None,
                  **kwargs):
-        '''
+        """
         Creates a base Config() object. This object is a basic python
         representation of a textual configuration(file). This configuration
         is currently described using JSON. This class provides utilities to
@@ -45,13 +46,17 @@ class Config(object):
         :param version: Optional. string. can be used to version a config
         :param kwargs: Optional set of key word args which will be passed to
                        to the local user defined _setup() method.
-        '''
+        """
+        self.name = name
+        self.description = description
+
         self._json_properties = {}
         # Set name and config file path first to allow updating base values
         # from an existing file
         self.add_prop('name', name)
         self.config_file_path = config_file_path
         self.update_from_file()
+        self.default_attributes = {}
         #Now overwrite with any params provided
         self.add_prop('type', type)
         self.add_prop('version', version)
@@ -85,11 +90,6 @@ class Config(object):
 
     def _get_formatted_conf(self):
         return pformat(vars(self))
-
-    def _get_formatted_conf_from_file(self):
-        if self.config_file_path:
-            dict = self._get_dict_from_file(self.config_file_path)
-            return pformat(dict)
 
     def _get_keys(self):
         return vars(self).keys()
@@ -282,3 +282,22 @@ class Config(object):
                           default=lambda o: o._json_properties,
                           sort_keys=True,
                           indent=4)
+
+    def add_config(self, service_config):
+        self.default_attributes.update(
+            {service_config.__class__.__name__.lower(): service_config}
+        )
+
+    def to_dict(self):
+        return dict(name=self.name,
+                    description=self.description,
+                    default_attributes=self.default_attributes)
+
+
+class DMJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if hasattr(obj, 'to_dict'):
+            return obj.to_dict()
+        else:
+            return json.JSONEncoder.default(self, obj)
+

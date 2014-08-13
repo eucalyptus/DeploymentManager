@@ -15,4 +15,6 @@
 # limitations under the License.
 
 
-__version__ = 0.1
+class Walrus:
+    def __init__(self, hostname):
+        self.hostname = hostname
