@@ -1,4 +1,4 @@
-DeploymentManager
+Config Manager
 ================
 
 Configuration Management Tool for Eucalyptus Deployment
