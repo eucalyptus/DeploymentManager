@@ -14,66 +14,59 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from collections import OrderedDict
 import os
-from namespace import Namespace
 import json
 from pprint import pformat
 from shutil import copyfile
 import difflib
 
 
-class Config(Namespace):
-
-    '''
+class Config(object):
+    """
     Intention of this class is to provide utilities around reading and writing
     CLI environment related configuration.
-    '''
+    """
     def __init__(self,
-                 config_file_path,
-                 name=None,
-                 default_dict=None):
-        #Create instance attributes from provided dict...
-        super(Config, self).__init__(newdict=default_dict)
-        self.name = name or getattr(self, 'name', None)
-        if not self.name:
-            raise AttributeError('Need to specify config name, or provide '
-                                 'name in default dict')
+                 name,
+                 config_file_path=None,
+                 type=None,
+                 version=None,
+                 **kwargs):
+        self._json_properties = {}
+        #Set name and config file path first to allow updating base from file
+        self.add_prop('name', name)
         self.config_file_path = config_file_path
-        self.name = name or os.path.basename(self.config_file_path).split('.')[0]
-        self._update_from_file()
+        self.update_from_file()
+        #Now overwrite with any params provided
+        self.add_prop('type', type)
+        self.add_prop('version', version)
+        self._setup(**kwargs)
 
+    def _setup(self, **kwargs):
+        """
+        Optional setup method to be implemented by subclasses.
+        This method is called by Config.__init__().
+        """
+        pass
 
-    def _update_from_file(self, file_path=None):
-        file_path = file_path or self.config_file_path
-        newdict = self._get_dict_from_file(file_path=file_path)
-        if newdict:
-            self.__dict__.update(newdict)
+    def _get_json_property(self, property_name):
+        """
+        helper method for mapping json to python properties
+        """
+        return self._json_properties[property_name]
 
-    def _get_dict_from_file(self, file_path=None):
-        file_path = file_path or self.config_file_path
-        return get_dict_from_file(file_path)
+    def _set_json_property(self, property_name, value):
+        """
+        helper method for mapping json to python properties
+        """
+        self._json_properties[property_name] = value
 
-    def validate(self):
-        print "everything is awesome!"
-
-    def write(self, filehandle=None):
-        print "written"
-
-    def _diff(self, file_path=None):
-        '''
-        Method to show current values vs those (saved) in a file.
-        Will return a formatted string to show the difference
-        '''
-        #Create formatted string representation of dict values
-        self_dict = vars(self)
-        text1 = json.dumps(self_dict, sort_keys=True, indent=4).splitlines()
-        #Create formatted string representation of values in file
-        file_path = file_path or self.config_file_path
-        file_dict = self._get_dict_from_file(file_path=file_path) or {}
-        text2 = json.dumps(file_dict, sort_keys=True, indent=4).splitlines()
-        diff = difflib.unified_diff(text1, text2, lineterm='')
-        return '\n'.join(diff)
+    def _del_json_property(self, property_name):
+        """
+        helper method for mapping json to python properties
+        """
+        if property_name in self._json_properties:
+            self._json_properties.pop(property_name)
 
     def _get_formatted_conf(self):
         return pformat(vars(self))
@@ -83,24 +76,17 @@ class Config(Namespace):
             dict = self._get_dict_from_file(self.config_file_path)
             return pformat(dict)
 
-    def _save(self, path=None):
-        path = path or self.config_file_path
-        backup_path = path + '.bak'
-        config_json = json.dumps(vars(self), indent=4)
-        if os.path.isfile(path):
-            copyfile(path, backup_path)
-        save_file = file(path, "w")
-        with save_file:
-            save_file.write(config_json)
-            save_file.flush()
-
     def _get_keys(self):
         return vars(self).keys()
 
-
-def get_dict_from_file(file_path):
+    def _get_dict_from_file(self, file_path=None):
+        """
+        Attempts to read in json from an existing file, load and return as
+        a dict
+        """
+        file_path = file_path or self.config_file_path
         newdict = None
-        if os.path.exists(file_path) and os.path.getsize(file_path):
+        if os.path.exists(str(file_path)) and os.path.getsize(str(file_path)):
             if not os.path.isfile(file_path):
                 raise ValueError('config file exists at path and is not '
                                  'a file:' + str(file_path))
@@ -116,3 +102,158 @@ def get_dict_from_file(file_path):
                     raise
         return newdict
 
+    def __repr__(self):
+        return self.to_json()
+
+    def add_prop(self,
+                 python_name,
+                 value=None,
+                 json_name=None,
+                 docstring=None,
+                 validate_callback=None):
+        """
+        Dyanmically add properties which will be used to build json
+        representation of this object for configuration purposes. Allows
+        values to be accessed as both a local python attribute/property of
+        this object, and store that value in a formatted dict for json
+        conversion. The setter can also be created with a validation
+        method which is called before writing to the json dict storing the
+        value. Note that the validator must return the value which will be
+        stored.
+
+        :param python_name: The name of the python property which will be
+                            create for this config obj.
+        :param json_name: The name used to store the value in self._json_dict
+        :param value: optional value to store. Defaults to 'None'
+        :param docstring: optional docstring to be used with creating the
+                          dynamic python property
+        :param validate_callback: optional method, if provided this method can
+                                  be used validate or convert the value before
+                                  storing.
+        Example:
+        In [29] def stringcheck(value)
+                    assert isinstance(value, str)
+                    return value
+        In [30] c = Config(name='example')
+        In [31] c.add_prop('my_python_string',
+                    value='python doesnt like dashes',
+                    json_name='my-json-string',
+                    docstring='just a string',
+                    validate_callback=stringcheck)
+        In [32]: print c.my_python_string
+        python doesnt like dashes
+
+        In [33]: print c._to_json()
+        {
+            "my-json-string": "python doesnt like dashes",
+            "name": "testconfig",
+            "type": null,
+            "version": null
+        }
+        In [34]: c.my_python_string = 'easy to change'
+
+        In [35]: print c.my_python_string
+        easy to change
+
+        In [36]: print c._to_json()
+        {
+            "my-json-string": "easy to change",
+            "name": "testconfig",
+            "type": null,
+            "version": null
+        }
+        """
+        assert python_name
+        json_name = json_name or python_name
+        #print 'Adding property name:{0}, json_name:{1}, value:{2}'\
+        #    .format(python_name, json_name, value)
+        docstring = docstring or "Updates json dict for value:'{0}'"\
+            .format(json_name)
+
+        def temp_prop_getter(self):
+            return self._get_json_property(json_name)
+
+        def temp_prop_setter(self, newvalue):
+            print 'setting {0} to value {1}'.format(python_name, value)
+            validate = getattr(self, '_validate_' + python_name, None)
+            if validate:
+                newvalue = validate(newvalue)
+            return self._set_json_property(json_name, newvalue)
+
+        def temp_prop_delete(self):
+            self._del_json_property(json_name)
+        temp_prop = property(fget=temp_prop_getter, fset=temp_prop_setter,
+                             fdel=temp_prop_delete, doc=docstring)
+        setattr(self.__class__, python_name, temp_prop)
+        self._set_json_property(json_name, value)
+
+    def del_prop(self, property_name):
+        prop = getattr(self, property_name, None)
+        if prop:
+            if isinstance(prop, property):
+                self.__delattr__(property_name)
+            else:
+                raise ValueError('{0} is not a "property" of this obj'
+                                 .format(property_name))
+
+    def update_from_file(self, file_path=None):
+        file_path = file_path or self.config_file_path
+        newdict = self._get_dict_from_file(file_path=file_path)
+        if newdict:
+            self.__dict__.update(newdict)
+
+    #todo define how validation methods for each config subclass should be used
+    def validate(self):
+        """
+        Method to validate configuration. This would likely be checks
+        against the aggregate config as individual validation checks
+        should be done in each property's setter via the validation_callback
+        """
+        pass
+
+    def write(self, filehandle=None):
+        """
+        Method which defines how, where, when etc a config should be written.
+        For writing to a local path use self.save(), this method is a
+        placeholder for possibly writing to a remote server, or submitting
+        the json configuration to another process, etc..
+        """
+        pass
+
+    def diff(self, file_path=None):
+        """
+        Method to show current values vs those (saved) in a file.
+        Will return a formatted string to show the difference
+        """
+        #Create formatted string representation of dict values
+        text1 = self.to_json().splitlines()
+        #Create formatted string representation of values in file
+        file_path = file_path or self.config_file_path
+        file_dict = self._get_dict_from_file(file_path=file_path) or {}
+        text2 = json.dumps(file_dict, sort_keys=True, indent=4).splitlines()
+        diff = difflib.unified_diff(text2, text1, lineterm='')
+        return '\n'.join(diff)
+
+    def save(self, path=None):
+        """
+        Will write the json configuration to a file at path or by default at
+        self.config_file_path.
+        """
+        path = path or self.config_file_path
+        backup_path = path + '.bak'
+        config_json = self.to_json()
+        if os.path.isfile(path):
+            copyfile(path, backup_path)
+        save_file = file(path, "w")
+        with save_file:
+            save_file.write(config_json)
+            save_file.flush()
+
+    def to_json(self):
+        """
+        converts the local dict '_json_properties{} to json
+        """
+        return json.dumps(self,
+                          default=lambda o: o._json_properties,
+                          sort_keys=True,
+                          indent=4)
