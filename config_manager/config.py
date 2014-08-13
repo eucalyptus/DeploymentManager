@@ -235,7 +235,8 @@ class Config(object):
         """
         pass
 
-    def write(self, filehandle=None):
+    #todo define how/if this method should be used, examples, etc..
+    def send(self, filehandle=None):
         """
         Method which defines how, where, when etc a config should be written.
         For writing to a local path use self.save(), this method is a
