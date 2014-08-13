@@ -13,3 +13,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+
+class SystemProperties:
+    def __init__(self, properties=None):
+        self.system_properties = {}
+        if properties:
+            self.system_properties = properties
+
+    def add_property(self, key, value):
+        self.system_properties.update({key: value})
+
+    def to_dict(self):
+        return self.system_properties

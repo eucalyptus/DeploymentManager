@@ -15,4 +15,7 @@
 # limitations under the License.
 
 
-__version__ = 0.1
+class Sources:
+    def __init__(self, repository=None, branch=None):
+        self.repository = repository
+        self.branch = branch

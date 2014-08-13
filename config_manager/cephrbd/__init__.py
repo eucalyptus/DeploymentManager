@@ -15,4 +15,9 @@
 # limitations under the License.
 
 
-__version__ = 0.1
+class CephRBD:
+    def __init__(self):
+        self.name = "CephRBD"
+
+    def to_dict(self):
+        return {}

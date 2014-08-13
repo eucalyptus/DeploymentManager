@@ -15,4 +15,6 @@
 # limitations under the License.
 
 
-__version__ = 0.1
+class UserFacingServices:
+    def __init__(self, hostnames):
+        self.hostnames = hostnames
