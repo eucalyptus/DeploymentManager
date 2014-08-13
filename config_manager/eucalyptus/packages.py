@@ -16,7 +16,7 @@
 
 
 class Packages:
-    def __init__(self, eucalyptus_repo, euca2ools_repo, enterprise_repo):
+    def __init__(self, eucalyptus_repo=None, euca2ools_repo=None, enterprise_repo=None):
         self.eucalyptus_repo = eucalyptus_repo
         self.euca2ools_repo = euca2ools_repo
         self.enterprise_repo = enterprise_repo
