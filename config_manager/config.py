@@ -31,12 +31,12 @@ class ConfigProperty(object):
         self._json_properties = {}
         # Set name and config file path first to allow updating base values
         # from an existing file
-        self.add_prop('name', name)
+        self.name = self.add_prop('name', name)
         self.default_attributes = {}
         #Now overwrite with any params provided
-        self.add_prop('objtype', objtype)
-        self.add_prop('version', version)
-        self.add_prop('description', description)
+        self.objtype = self.add_prop('objtype', objtype)
+        self.version = self.add_prop('version', version)
+        self.description = self.add_prop('description', description)
         self._setup(**kwargs)
 
     def _setup(self, **kwargs):
@@ -73,9 +73,8 @@ class ConfigProperty(object):
         return self.to_json()
 
     def add_prop(self,
-                 python_name,
+                 json_name,
                  value=None,
-                 json_name=None,
                  docstring=None,
                  validate_callback=None):
         """
@@ -131,8 +130,6 @@ class ConfigProperty(object):
             "version": null
         }
         """
-        assert python_name
-        json_name = json_name or python_name
         docstring = docstring or "Updates json dict for value:'{0}'"\
             .format(json_name)
 
@@ -157,8 +154,9 @@ class ConfigProperty(object):
             self._del_json_property(json_name)
         temp_prop = property(fget=temp_prop_getter, fset=temp_prop_setter,
                              fdel=temp_prop_delete, doc=docstring)
-        setattr(self.__class__, python_name, temp_prop)
+        #setattr(self.__class__, python_name, temp_prop)
         self._set_json_property(json_name, value)
+        return temp_prop
 
     def del_prop(self, property_name):
         prop = getattr(self, property_name, None)
