@@ -20,46 +20,22 @@ from pprint import pformat
 from shutil import copyfile
 import difflib
 
-
-class Config(object):
-    """
-    Intention of this class is to provide utilities around reading and writing
-    CLI environment related configuration.
-    """
+class ConfigProperty(object):
     def __init__(self,
                  name,
+                 objtype=None,
                  description=None,
-                 config_file_path=None,
-                 type=None,
                  version=None,
                  **kwargs):
-        """
-        Creates a base Config() object. This object is a basic python
-        representation of a textual configuration(file). This configuration
-        is currently described using JSON. This class provides utilities to
-        read, write, map, save, compare, and validate python attributes to a
-        json configuration.
-        :param name: string. The name of this config section
-        :param config_file_path: Optional.string. Local path this config obj
-                                 should read/write
-        :param type: Optional. string. Identifier for this config object.
-        :param version: Optional. string. can be used to version a config
-        :param kwargs: Optional set of key word args which will be passed to
-                       to the local user defined _setup() method.
-        """
-        self.name = name
-        self.description = description
-
         self._json_properties = {}
         # Set name and config file path first to allow updating base values
         # from an existing file
         self.add_prop('name', name)
-        self.config_file_path = config_file_path
-        self.update_from_file()
         self.default_attributes = {}
         #Now overwrite with any params provided
-        self.add_prop('type', type)
+        self.add_prop('objtype', objtype)
         self.add_prop('version', version)
+        self.add_prop('description', description)
         self._setup(**kwargs)
 
     def _setup(self, **kwargs):
@@ -87,35 +63,6 @@ class Config(object):
         """
         if property_name in self._json_properties:
             self._json_properties.pop(property_name)
-
-    def _get_formatted_conf(self):
-        return pformat(vars(self))
-
-    def _get_keys(self):
-        return vars(self).keys()
-
-    def _get_dict_from_file(self, file_path=None):
-        """
-        Attempts to read in json from an existing file, load and return as
-        a dict
-        """
-        file_path = file_path or self.config_file_path
-        newdict = None
-        if os.path.exists(str(file_path)) and os.path.getsize(str(file_path)):
-            if not os.path.isfile(file_path):
-                raise ValueError('config file exists at path and is not '
-                                 'a file:' + str(file_path))
-            conf_file = open(file_path, 'rb')
-            with conf_file:
-                data = conf_file.read()
-            if data:
-                try:
-                    newdict = json.loads(data)
-                except ValueError as ve:
-                    ve.args = (['Failed to load json config from: "{0}". '
-                                'ERR: "{1}"'.format(file_path, ve.message)])
-                    raise
-        return newdict
 
     def __repr__(self):
         """
@@ -189,9 +136,11 @@ class Config(object):
             .format(json_name)
 
         def temp_prop_getter(self):
+            print 'getting ' + str(json_name)
             return self._get_json_property(json_name)
 
         def temp_prop_setter(self, newvalue):
+            print 'setting ' + str(json_name) +  ' to value:' + str(newvalue)
             # If a validation callback was provided use it, otherwise
             # allow the user to create a local method named
             # by '_validate_' + the python_name provided which will be
@@ -216,13 +165,6 @@ class Config(object):
         if prop:
             self.__delattr__(property_name)
 
-
-    def update_from_file(self, file_path=None):
-        file_path = file_path or self.config_file_path
-        newdict = self._get_dict_from_file(file_path=file_path)
-        if newdict:
-            self.__dict__.update(newdict)
-
     #todo define how validation methods for each config subclass should be used
     def validate(self):
         """
@@ -231,6 +173,86 @@ class Config(object):
         should be done in each property's setter via the validation_callback
         """
         pass
+
+    def to_json(self):
+        """
+        converts the local dict '_json_properties{} to json
+        """
+        return json.dumps(self,
+                          default=lambda o: o._json_properties,
+                          sort_keys=True,
+                          indent=4)
+
+
+class Config(ConfigProperty):
+    """
+    Intention of this class is to provide utilities around reading and writing
+    CLI environment related configuration.
+    """
+    def __init__(self,
+                 name,
+                 description=None,
+                 config_file_path=None,
+                 type=None,
+                 version=None,
+                 **kwargs):
+        """
+        Creates a base Config() object. This object is a basic python
+        representation of a textual configuration(file). This configuration
+        is currently described using JSON. This class provides utilities to
+        read, write, map, save, compare, and validate python attributes to a
+        json configuration.
+        :param name: string. The name of this config section
+        :param config_file_path: Optional.string. Local path this config obj
+                                 should read/write
+        :param type: Optional. string. Identifier for this config object.
+        :param version: Optional. string. can be used to version a config
+        :param kwargs: Optional set of key word args which will be passed to
+                       to the local user defined _setup() method.
+        """
+        # Set name and config file path first to allow updating base values
+        # from an existing file
+        super(Config, self).__init__(name=name, description=description,
+                                     type=type, version=version, kwargs=kwargs)
+        self.config_file_path = config_file_path
+        self.update_from_file()
+        self.default_attributes = {}
+
+    def _get_formatted_conf(self):
+        return pformat(vars(self))
+
+    def _get_keys(self):
+        return vars(self).keys()
+
+    def _get_dict_from_file(self, file_path=None):
+        """
+        Attempts to read in json from an existing file, load and return as
+        a dict
+        """
+        file_path = file_path or self.config_file_path
+        newdict = None
+        if os.path.exists(str(file_path)) and os.path.getsize(str(file_path)):
+            if not os.path.isfile(file_path):
+                raise ValueError('config file exists at path and is not '
+                                 'a file:' + str(file_path))
+            conf_file = open(file_path, 'rb')
+            with conf_file:
+                data = conf_file.read()
+            if data:
+                try:
+                    newdict = json.loads(data)
+                except ValueError as ve:
+                    ve.args = (['Failed to load json config from: "{0}". '
+                                'ERR: "{1}"'.format(file_path, ve.message)])
+                    raise
+        return newdict
+
+    def update_from_file(self, file_path=None):
+        file_path = file_path or self.config_file_path
+        newdict = self._get_dict_from_file(file_path=file_path)
+        if newdict:
+            self.__dict__.update(newdict)
+
 
     #todo define how/if this method should be used, examples, etc..
     def send(self, filehandle=None):
@@ -271,14 +293,7 @@ class Config(object):
             save_file.write(config_json)
             save_file.flush()
 
-    def to_json(self):
-        """
-        converts the local dict '_json_properties{} to json
-        """
-        return json.dumps(self,
-                          default=lambda o: o._json_properties,
-                          sort_keys=True,
-                          indent=4)
+
 
     def add_config(self, service_config):
         self.default_attributes.update(
