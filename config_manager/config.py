@@ -32,8 +32,23 @@ class Config(object):
                  type=None,
                  version=None,
                  **kwargs):
+        '''
+        Creates a base Config() object. This object is a basic python
+        representation of a textual configuration(file). This configuration
+        is currently described using JSON. This class provides utilities to
+        read, write, map, save, compare, and map python attributes to a json
+        configuration.
+        :param name: string. The name of this config section
+        :param config_file_path: Optional.string. Local path this config obj
+                                 should read/write
+        :param type: Optional. string. Identifier for this config object.
+        :param version: Optional. string. can be used to version a config
+        :param kwargs: Optional set of key word args which will be passed to
+                       to the local user defined _setup() method.
+        '''
         self._json_properties = {}
-        #Set name and config file path first to allow updating base from file
+        # Set name and config file path first to allow updating base values
+        # from an existing file
         self.add_prop('name', name)
         self.config_file_path = config_file_path
         self.update_from_file()
@@ -103,6 +118,10 @@ class Config(object):
         return newdict
 
     def __repr__(self):
+        """
+        Default string representation of this object will be the formatted
+        json configuration
+        """
         return self.to_json()
 
     def add_prop(self,
@@ -112,14 +131,15 @@ class Config(object):
                  docstring=None,
                  validate_callback=None):
         """
-        Dyanmically add properties which will be used to build json
+        Dynamically add properties which will be used to build json
         representation of this object for configuration purposes. Allows
         values to be accessed as both a local python attribute/property of
         this object, and store that value in a formatted dict for json
         conversion. The setter can also be created with a validation
         method which is called before writing to the json dict storing the
         value. Note that the validator must return the value which will be
-        stored.
+        stored. This allows for the value to be formatted/manipulated before
+        storing.
 
         :param python_name: The name of the python property which will be
                             create for this config obj.
@@ -165,8 +185,6 @@ class Config(object):
         """
         assert python_name
         json_name = json_name or python_name
-        #print 'Adding property name:{0}, json_name:{1}, value:{2}'\
-        #    .format(python_name, json_name, value)
         docstring = docstring or "Updates json dict for value:'{0}'"\
             .format(json_name)
 
@@ -174,8 +192,14 @@ class Config(object):
             return self._get_json_property(json_name)
 
         def temp_prop_setter(self, newvalue):
-            print 'setting {0} to value {1}'.format(python_name, value)
-            validate = getattr(self, '_validate_' + python_name, None)
+            # If a validation callback was provided use it, otherwise
+            # allow the user to create a local method named
+            # by '_validate_' + the python_name provided which will be
+            # called. A validation method is optional but if defined,
+            # must return the value to be set for this property.
+            validate = validate_callback or getattr(self,
+                                                    '_validate_' + python_name,
+                                                    None)
             if validate:
                 newvalue = validate(newvalue)
             return self._set_json_property(json_name, newvalue)
