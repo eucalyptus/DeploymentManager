@@ -31,12 +31,12 @@ class ConfigProperty(object):
         self._json_properties = {}
         # Set name and config file path first to allow updating base values
         # from an existing file
-        self.name = self.add_prop('name', name)
+        self.name = self.create_prop('name', name)
         self.default_attributes = {}
         #Now overwrite with any params provided
-        self.objtype = self.add_prop('objtype', objtype)
-        self.version = self.add_prop('version', version)
-        self.description = self.add_prop('description', description)
+        self.objtype = self.create_prop('objtype', objtype)
+        self.version = self.create_prop('version', version)
+        self.description = self.create_prop('description', description)
         self._setup(**kwargs)
 
     def _setup(self, **kwargs):
@@ -72,7 +72,7 @@ class ConfigProperty(object):
         """
         return self.to_json()
 
-    def add_prop(self,
+    def create_prop(self,
                  json_name,
                  value=None,
                  docstring=None,
