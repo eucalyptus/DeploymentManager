@@ -214,11 +214,8 @@ class Config(object):
     def del_prop(self, property_name):
         prop = getattr(self, property_name, None)
         if prop:
-            if isinstance(prop, property):
-                self.__delattr__(property_name)
-            else:
-                raise ValueError('{0} is not a "property" of this obj'
-                                 .format(property_name))
+            self.__delattr__(property_name)
+
 
     def update_from_file(self, file_path=None):
         file_path = file_path or self.config_file_path
