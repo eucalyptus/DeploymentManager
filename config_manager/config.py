@@ -37,7 +37,7 @@ class ConfigProperty(object):
         self.objtype = self.create_prop('objtype', objtype)
         self.version = self.create_prop('version', version)
         self.description = self.create_prop('description', description)
-        self._setup(**kwargs)
+        # self._setup(kwargs)
 
     def _setup(self, **kwargs):
         """
@@ -160,7 +160,11 @@ class ConfigProperty(object):
 
     def del_prop(self, property_name):
         prop = getattr(self, property_name, None)
+        if not hasattr(prop, 'fdel'):
+            raise ValueError('{0} is not a property of this object'
+                             .format(property_name))
         if prop:
+            prop.fdel(self)
             self.__delattr__(property_name)
 
     #todo define how validation methods for each config subclass should be used
