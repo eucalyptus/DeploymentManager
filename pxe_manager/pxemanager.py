@@ -36,13 +36,18 @@ from resource_manager.client import ResourceManagerClient
 
 class PxeManager(object):
     def __init__(self):
-        self.cobbler = xmlrpclib.Server("http://cobbler/cobbler_api")
+        self.cobbler = xmlrpclib.Server("http://cobbler.com/cobbler_api")
         self.token = self.cobbler.login("***", "***")
 
-        self.resource_manager =  ResourceManagerClient()
+        self.resource_manager = ResourceManagerClient()
+
+        self.distro = {'esxi51': 'qa-vmwareesxi51u0-x86_64',
+                'esxi50': 'qa-vmwareesxi50u1-x86_64',
+                'centos': 'qa-centos6-x86_64-striped-drives',
+                'rhel': 'qa-rhel6u5-x86_64-striped-drives'}
 
     def get_machines(self, owner, count, job_id, distro):
-        os = self.map_distro(distro)
+        os = self.distro[distro]
         for i in range(count):
             '''
             TODO: query DB update DB, kickstart
@@ -53,21 +58,6 @@ class PxeManager(object):
             # self.kickstart_machine(system_name=system_name, distro=os)
         return
 
-    def map_distro(self, distro):
-        '''
-        Definition mappings for distros
-        '''
-        if distro == 'esxi51':
-            return "qa-vmwareesxi51u0-x86_64"
-        elif distro == 'esxi50':
-            return "qa-vmwareesxi50u1-x86_64"
-        elif distro == 'centos':
-            return "qa-centos6-x86_64-striped-drives"
-        elif distro == 'rhel':
-            return "qa-rhel6u5-x86_64-striped-drives"
-        else:
-            raise Exception("Unknown Distro. Valid values are: centos, rhel, esxi50, esxi51")
-
     def kickstart_machine(self, system_name, distro):
         """
         Kickstart machine with specified OS
@@ -77,15 +67,8 @@ class PxeManager(object):
         :return:
         """
         system_handle = self.cobbler.get_system_handle(system_name, self.token)
-
-        profile_args = {"profile": distro}
-        for k, v in profile_args.items():
-            self.cobbler.modify_system(system_handle, k, v, self.token)
-
-        netboot_args = {"netboot-enabled": 1}
-        for k, v in netboot_args.items():
-            self.cobbler.modify_system(system_handle, k, v, self.token)
-
+        self.cobbler.modify_system(system_handle, "profile", distro, self.token)
+        self.cobbler.modify_system(system_handle, "netboot-enabled", 1, self.token)
         self.cobbler.save_system(system_handle, self.token)
 
         reboot_args = {"power": "reboot", "systems": [system_name]}
