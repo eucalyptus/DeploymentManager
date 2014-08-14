@@ -13,14 +13,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from config_manager.config import Config
+from config_manager.config import Config, ConfigProperty
 
 
 class Cluster(Config):
-    def __init__(self, name, cc_hostname=None, sc_hostname=None):
-        self.name = name
-        self.cc_hostname = cc_hostname
-        self.sc_hostname = sc_hostname
+    def _setup(self, cc_hostname=None, sc_hostname=None):
+        self.cc_hostname = self.create_prop(json_name='cc_hostname',
+                                            value=cc_hostname)
+        self.sc_hostname = self.create_prop(json_name='sc_hostname',
+                                            value=sc_hostname)
 
     def to_dict(self):
         return {

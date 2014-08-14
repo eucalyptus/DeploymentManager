@@ -144,7 +144,7 @@ class ConfigProperty(object):
             # called. A validation method is optional but if defined,
             # must return the value to be set for this property.
             validate = validate_callback or getattr(self,
-                                                    '_validate_' + python_name,
+                                                    '_validate_' + json_name,
                                                     None)
             if validate:
                 newvalue = validate(newvalue)
@@ -212,7 +212,7 @@ class Config(ConfigProperty):
         # from an existing file
         super(Config, self).__init__(name=name,
                                      description=description,
-                                     type=objtype,
+                                     objtype=objtype,
                                      version=version,
                                      kwargs=kwargs)
         self.config_file_path = config_file_path
