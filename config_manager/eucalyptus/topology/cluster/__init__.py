@@ -18,7 +18,7 @@ from config_manager.config import Config, ConfigProperty
 
 class Cluster(Config):
     def __init__(self,
-                 name,
+                 name=None,
                  description=None,
                  config_file_path=None,
                  objtype=None,

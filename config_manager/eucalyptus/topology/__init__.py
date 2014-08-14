@@ -13,14 +13,21 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from config_manager.config import Config
 
 
-class Topology:
-    def __init__(self):
+class Topology(Config):
+    def __init__(self, name=None):
         self.cloud_controller = None
         self.walrus = None
         self.user_facing = None
         self.clusters = {}
+
+        super(Topology, self).__init__(name=name,
+                                       description=None,
+                                       config_file_path=None,
+                                       objtype=None,
+                                       version=None)
 
     def add_cluster(self, clusters):
         for cluster in clusters:

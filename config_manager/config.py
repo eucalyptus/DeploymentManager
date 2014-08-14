@@ -23,7 +23,7 @@ import difflib
 
 class ConfigProperty(object):
     def __init__(self,
-                 name,
+                 name=None,
                  objtype=None,
                  description=None,
                  version=None,
@@ -31,9 +31,13 @@ class ConfigProperty(object):
         self._json_properties = {}
         # Set name and config file path first to allow updating base values
         # from an existing file
-        self.name = self.create_prop('name', name)
+        self.name = name
+        if not name:
+            self.name = self.__class__.__name__.lower()
+
         self.default_attributes = {}
         #Now overwrite with any params provided
+        self.name = self.create_prop('name', self.name)
         self.objtype = self.create_prop('objtype', objtype)
         self.version = self.create_prop('version', version)
         self.description = self.create_prop('description', description)
