@@ -130,38 +130,50 @@ class ConfigProperty(object):
             "version": null
         }
         """
+        config_obj = self
         docstring = docstring or "Updates json dict for value:'{0}'"\
             .format(json_name)
 
-        def temp_prop_getter(self):
-            return self._get_json_property(json_name)
+        def temp_prop_getter():
+            return config_obj._get_json_property(json_name)
 
-        def temp_prop_setter(self, newvalue):
+        def temp_prop_setter(newvalue):
             print 'setting ' + str(json_name) +  ' to value:' + str(newvalue)
             # If a validation callback was provided use it, otherwise
             # allow the user to create a local method named
             # by '_validate_' + the python_name provided which will be
             # called. A validation method is optional but if defined,
             # must return the value to be set for this property.
-            validate = validate_callback or getattr(self,
+            validate = validate_callback or getattr(config_obj,
                                                     '_validate_' + json_name,
                                                     None)
             if validate:
                 newvalue = validate(newvalue)
-            return self._set_json_property(json_name, newvalue)
+            return config_obj._set_json_property(json_name, newvalue)
 
-        def temp_prop_delete(self):
-            self._del_json_property(json_name)
+        def temp_prop_delete():
+            config_obj._del_json_property(json_name)
         temp_prop = property(fget=temp_prop_getter, fset=temp_prop_setter,
                              fdel=temp_prop_delete, doc=docstring)
         #setattr(self.__class__, python_name, temp_prop)
-        self._set_json_property(json_name, value)
+        config_obj._set_json_property(json_name, value)
         return temp_prop
 
     def del_prop(self, property_name):
         prop = getattr(self, property_name, None)
+        if not hasattr(prop, 'fdel'):
+            raise ValueError('{0} is not a property of this object'
+                             .format(property_name))
         if prop:
+            prop.fdel(self)
             self.__delattr__(property_name)
+
+    def get_attr_by_json_name(self, json_name):
+        for key in self._get_keys():
+            attr = getattr(self, key)
+            if hasattr(attr, 'fget') and attr.fget() == json_name:
+                return attr
+        return None
 
     #todo define how validation methods for each config subclass should be used
     def validate(self):
@@ -250,10 +262,18 @@ class Config(ConfigProperty):
 
     def update_from_file(self, file_path=None):
         file_path = file_path or self.config_file_path
+        if not file_path:
+            return
         newdict = self._get_dict_from_file(file_path=file_path)
         if newdict:
-            self.__dict__.update(newdict)
-
+            for key in newdict:
+                value = newdict[key]
+                if not key in self._json_properties:
+                    print ('warning "{0}" not found in json properties for '
+                           'class: "{1}"'.format(key, self.__class__))
+                else:
+                    attr = self.get_attr_by_json_name(key)
+                    attr.fset(value)
 
     #todo define how/if this method should be used, examples, etc..
     def send(self, filehandle=None):
@@ -277,7 +297,7 @@ class Config(ConfigProperty):
         file_dict = self._get_dict_from_file(file_path=file_path) or {}
         text2 = json.dumps(file_dict, sort_keys=True, indent=4).splitlines()
         diff = difflib.unified_diff(text2, text1, lineterm='')
-        return '\n'.join(diff)
+        return str('\n'.join(diff))
 
     def save(self, path=None):
         """
@@ -285,6 +305,9 @@ class Config(ConfigProperty):
         self.config_file_path.
         """
         path = path or self.config_file_path
+        if not path:
+            raise ValueError('Path/config_file_path has not been set '
+                             'or provided.')
         backup_path = path + '.bak'
         config_json = self.to_json()
         if os.path.isfile(path):
