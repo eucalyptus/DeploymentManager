@@ -277,7 +277,11 @@ class Config(ConfigProperty):
                            'class: "{1}"'.format(key, self.__class__))
                 else:
                     attr = self.get_attr_by_json_name(key)
-                    attr.fset(value)
+                    if not attr:
+                        print 'warning local attribute with json_name "{0}" ' \
+                              'not found'.format(key)
+                    else:
+                        attr.fset(value)
 
     #todo define how/if this method should be used, examples, etc..
     def send(self, filehandle=None):
