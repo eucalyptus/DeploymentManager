@@ -37,7 +37,6 @@ class Eucalyptus(Config):
         super(Eucalyptus, self).__init__(name=None,
                                          description=None,
                                          config_file_path=None,
-                                         objtype=None,
                                          version=None)
 
     def set_log_level(self, log_level):
