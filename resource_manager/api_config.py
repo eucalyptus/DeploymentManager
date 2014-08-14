@@ -7,14 +7,19 @@ machine_schema = {
     'hostname': {
         'type': 'string',
         'required': True,
-        'unique': True,
+        'unique': True
+
     },
     'owner': {
         'type': 'string'
     },
     'state': {
         'type': 'string',
-        'allowed': ["pxe", "pxe_failed","idle","needs_repair"]
+        'required': True,
+        'allowed': ["pxe", "pxe_failed", "idle", "in_use", "needs_repair"]
+    },
+    'job_id': {
+        'type': 'string'
     }
 }
 
