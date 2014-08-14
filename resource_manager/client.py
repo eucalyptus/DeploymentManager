@@ -17,7 +17,7 @@ class RequestFailureException(Exception):
 
 
 class ResourceManagerClient(object):
-    FIELDS = {'machines': ["hostname", "owner", "_updated", "_id"],
+    FIELDS = {'machines': ["hostname", "owner", "state", "job_id", "_updated", "_id"],
               'private-addresses': ["address", "owner", "_updated", "_id"],
               'public-addresses': ["address",  "owner", "_updated", "_id"]}
 
@@ -68,6 +68,13 @@ class ResourceManagerClient(object):
         for resource in items:
             table.add_row([resource.get(field, None) for field in self.fields])
         print table.get_string(fields=self.fields)
+
+    def find_resources(self, field, value):
+        query = self.endpoint + "?where=" + field + "==\"" + value + "\""
+        resource_request = requests.get(query, auth=self.auth)
+        if resource_request.status_code != 200:
+            raise RequestFailureException(resource_request)
+        return resource_request.json()
 
 if __name__ == "__main__":
     resources = ['machines', 'public-addresses', 'private-addresses']

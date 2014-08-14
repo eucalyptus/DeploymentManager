@@ -28,7 +28,6 @@ class Cluster(Config):
         super(Cluster, self).__init__(name,
                                       description=None,
                                       config_file_path=None,
-                                      objtype=None,
                                       version=None)
         self.cc_hostname = self.create_prop(json_name='cc_hostname',
                                             value=cc_hostname)

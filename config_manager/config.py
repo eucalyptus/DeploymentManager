@@ -24,7 +24,6 @@ import difflib
 class ConfigProperty(object):
     def __init__(self,
                  name=None,
-                 objtype=None,
                  description=None,
                  version=None,
                  **kwargs):
@@ -38,7 +37,7 @@ class ConfigProperty(object):
         self.default_attributes = {}
         #Now overwrite with any params provided
         self.name = self.create_prop('name', self.name)
-        self.objtype = self.create_prop('objtype', objtype)
+        self.objtype = self.create_prop('objtype', self.__class__.__name__)
         self.version = self.create_prop('version', version)
         self.description = self.create_prop('description', description)
         # self._setup(kwargs)

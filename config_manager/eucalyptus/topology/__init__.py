@@ -26,7 +26,6 @@ class Topology(Config):
         super(Topology, self).__init__(name=name,
                                        description=None,
                                        config_file_path=None,
-                                       objtype=None,
                                        version=None)
 
     def add_cluster(self, clusters):
