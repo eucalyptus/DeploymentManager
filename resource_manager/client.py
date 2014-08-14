@@ -69,10 +69,12 @@ class ResourceManagerClient(object):
             table.add_row([resource.get(field, None) for field in self.fields])
         print table.get_string(fields=self.fields)
 
-    def find_resource(self, field, value):
+    def find_resources(self, field, value):
         query = self.endpoint + "?where=" + field + "==\"" + value + "\""
-        resource = requests.get(query, auth=self.auth).json()["_items"]
-        return resource
+        resource_request = requests.get(query, auth=self.auth)
+        if resource_request.status_code != 200:
+            raise RequestFailureException(resource_request)
+        return resource_request.json()
 
 if __name__ == "__main__":
     resources = ['machines', 'public-addresses', 'private-addresses']

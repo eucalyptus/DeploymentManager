@@ -36,16 +36,14 @@ import json
 from resource_manager.client import ResourceManagerClient
 
 class PxeManager(object):
-    def __init__(self):
-        self.cobbler = xmlrpclib.Server("http://cobbler.com/cobbler_api")
-        self.token = self.cobbler.login("***", "***")
-
+    def __init__(self, server_url, user, password):
+        self.cobbler = xmlrpclib.Server(server_url)
+        self.token = self.cobbler.login(user, password)
         self.resource_manager = ResourceManagerClient()
-
         self.distro = {'esxi51': 'qa-vmwareesxi51u0-x86_64',
-                'esxi50': 'qa-vmwareesxi50u1-x86_64',
-                'centos': 'qa-centos6-x86_64-striped-drives',
-                'rhel': 'qa-rhel6u5-x86_64-striped-drives'}
+                       'esxi50': 'qa-vmwareesxi50u1-x86_64',
+                       'centos': 'qa-centos6-x86_64-striped-drives',
+                       'rhel': 'qa-rhel6u5-x86_64-striped-drives'}
 
     def get_resource(self, owner, count, job_id, distro):
         """
@@ -56,7 +54,7 @@ class PxeManager(object):
         :param distro: what OS to install (see the global dict "distro" for valid options)
         :return:
         """
-        resources = self.resource_manager.find_resource(field="state", value="idle")
+        resources = self.resource_manager.find_resources(field="state", value="idle")['_items']
         for i in range(count):
             data = json.dumps({'hostname': resources[i]['hostname'], 'owner': owner, 'state': 'pxe', 'job_id': job_id})
             self.resource_manager.update_resource(data)
@@ -97,7 +95,7 @@ class PxeManager(object):
         :param value:
         :return:
         """
-        resources = self.resource_manager.find_resource(field=field, value=value)
+        resources = self.resource_manager.find_resources(field=field, value=value)['_items']
         for resource in resources:
             system_name = resource['hostname']
             print "Freeing " + system_name
