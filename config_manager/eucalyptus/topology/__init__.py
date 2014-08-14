@@ -18,15 +18,15 @@ from config_manager.config import Config
 
 class Topology(Config):
     def __init__(self, name=None):
-        self.cloud_controller = None
-        self.walrus = None
-        self.user_facing = None
-        self.clusters = {}
-
         super(Topology, self).__init__(name=name,
                                        description=None,
                                        config_file_path=None,
                                        version=None)
+
+        self.cloud_controller = None
+        self.walrus = None
+        self.user_facing = None
+        self.clusters = self.create_prop('clusters', value=[])
 
     def add_cluster(self, clusters):
         for cluster in clusters:

@@ -14,10 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from setuptools import setup
+try:
+    from setuptools import setup, find_packages
+except ImportError:
+    from distutils.core import setup
 
 
-setup(name='DeploymentManager',
+setup(name='deploymentmanager',
       version='0.1',
       description='Eucalyptus Configuration Input/Output',
       url='https://github.com/eucalyptus/DeploymentManager.git',

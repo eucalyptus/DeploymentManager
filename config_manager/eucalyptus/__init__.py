@@ -21,6 +21,10 @@ from config_manager.eucalyptus.system_properties import SystemProperties
 
 class Eucalyptus(Config):
     def __init__(self):
+        super(Eucalyptus, self).__init__(name=None,
+                                         description=None,
+                                         config_file_path=None,
+                                         version=None)
         self.log_level = None
         self.set_bind_addr = True
         self.install_load_balancer = True
@@ -33,11 +37,6 @@ class Eucalyptus(Config):
         self.topology = None
         self.network = None
         self.system_properties = None
-
-        super(Eucalyptus, self).__init__(name=None,
-                                         description=None,
-                                         config_file_path=None,
-                                         version=None)
 
     def set_log_level(self, log_level):
         self.log_level = log_level

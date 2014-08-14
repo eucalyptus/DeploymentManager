@@ -21,7 +21,7 @@ from shutil import copyfile
 import difflib
 
 
-class ConfigProperty(object):
+class PropertyManager(object):
     def __init__(self,
                  name=None,
                  description=None,
@@ -40,14 +40,6 @@ class ConfigProperty(object):
         self.objtype = self.create_prop('objtype', self.__class__.__name__)
         self.version = self.create_prop('version', version)
         self.description = self.create_prop('description', description)
-        # self._setup(kwargs)
-
-    def _setup(self, **kwargs):
-        """
-        Optional setup method to be implemented by subclasses.
-        This method is called by Config.__init__().
-        """
-        pass
 
     def _get_json_property(self, property_name):
         """
@@ -91,8 +83,6 @@ class ConfigProperty(object):
         stored. This allows for the value to be formatted/manipulated before
         storing.
 
-        :param python_name: The name of the python property which will be
-                            create for this config obj.
         :param json_name: The name used to store the value in self._json_dict
         :param value: optional value to store. Defaults to 'None'
         :param docstring: optional docstring to be used with creating the
@@ -100,38 +90,6 @@ class ConfigProperty(object):
         :param validate_callback: optional method, if provided this method can
                                   be used validate or convert the value before
                                   storing.
-        Example:
-        In [29] def stringcheck(value)
-                    assert isinstance(value, str)
-                    return value
-        In [30] c = Config(name='example')
-        In [31] c.add_prop('my_python_string',
-                    value='python doesnt like dashes',
-                    json_name='my-json-string',
-                    docstring='just a string',
-                    validate_callback=stringcheck)
-        In [32]: print c.my_python_string
-        python doesnt like dashes
-
-        In [33]: print c._to_json()
-        {
-            "my-json-string": "python doesnt like dashes",
-            "name": "testconfig",
-            "type": null,
-            "version": null
-        }
-        In [34]: c.my_python_string = 'easy to change'
-
-        In [35]: print c.my_python_string
-        easy to change
-
-        In [36]: print c._to_json()
-        {
-            "my-json-string": "easy to change",
-            "name": "testconfig",
-            "type": null,
-            "version": null
-        }
         """
         config_obj = self
         docstring = docstring or "Updates json dict for value:'{0}'"\
@@ -197,7 +155,7 @@ class ConfigProperty(object):
                           indent=4)
 
 
-class Config(ConfigProperty):
+class Config(PropertyManager):
     """
     Intention of this class is to provide utilities around reading and writing
     CLI environment related configuration.
