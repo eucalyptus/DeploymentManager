@@ -32,6 +32,7 @@
 #
 
 import xmlrpclib
+import json
 from resource_manager.client import ResourceManagerClient
 
 class PxeManager(object):
@@ -46,16 +47,21 @@ class PxeManager(object):
                 'centos': 'qa-centos6-x86_64-striped-drives',
                 'rhel': 'qa-rhel6u5-x86_64-striped-drives'}
 
-    def get_machines(self, owner, count, job_id, distro):
-        os = self.distro[distro]
+    def get_resource(self, owner, count, job_id, distro):
+        """
+        Get machines from machine pool
+        :param owner: who the reservation is for
+        :param count: how many machines to reserve
+        :param job_id: unique identifier for the reservation
+        :param distro: what OS to install (see the global dict "distro" for valid options)
+        :return:
+        """
+        resources = self.resource_manager.find_resource(field="state", value="idle")
         for i in range(count):
-            '''
-            TODO: query DB update DB, kickstart
-            '''
-            # system_name = self.resource_manager.get_resource(state="idle")
-            # self.resource_manager.update_resource(owner=owner, job_id= job_id, state="PXE")
-            # print "kickstarting host: " + self.cobbler.find_system({"name": system_name})
-            # self.kickstart_machine(system_name=system_name, distro=os)
+            data = json.dumps({'hostname': resources[i]['hostname'], 'owner': owner, 'state': 'pxe', 'job_id': job_id})
+            self.resource_manager.update_resource(data)
+            print "kickstarting host: " + resources[i]['hostname']
+            self.kickstart_machine(system_name=resources[i]['hostname'], distro=distro)
         return
 
     def kickstart_machine(self, system_name, distro):
@@ -67,7 +73,7 @@ class PxeManager(object):
         :return:
         """
         system_handle = self.cobbler.get_system_handle(system_name, self.token)
-        self.cobbler.modify_system(system_handle, "profile", distro, self.token)
+        self.cobbler.modify_system(system_handle, "profile", self.distro[distro], self.token)
         self.cobbler.modify_system(system_handle, "netboot-enabled", 1, self.token)
         self.cobbler.save_system(system_handle, self.token)
 
@@ -76,17 +82,25 @@ class PxeManager(object):
 
         '''
         TODO: ssh polling here
+
+        If ssh success then update DB otherwise retry
+            data = json.dumps({'hostname': system_name, 'state': 'in_use'})
+            self.resource_manager.update_resource(data)
         '''
         return
 
-    def free_machines(self, job_id):
-        '''
+    def free_machines(self, field, value):
+        """
+        free machines that match given criteria by clearing owner and job_id fields
 
-        :param job_id:
+        :param field:
+        :param value:
         :return:
-        '''
-        '''
-        TODO: free machines associated with job id by clearing owner and job_id fields
-        '''
-        print "Not yet implemented"
+        """
+        resources = self.resource_manager.find_resource(field=field, value=value)
+        for resource in resources:
+            system_name = resource['hostname']
+            print "Freeing " + system_name
+            data = json.dumps({'hostname': system_name, 'owner': '', 'state': 'idle', 'job_id': ''})
+            self.resource_manager.update_resource(data)
         return

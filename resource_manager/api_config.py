@@ -15,11 +15,11 @@ machine_schema = {
     },
     'state': {
         'type': 'string',
-        'allowed': ["pxe", "pxe_failed","idle","needs_repair"]
+        'required': True,
+        'allowed': ["pxe", "pxe_failed", "idle", "in_use", "needs_repair"]
     },
     'job_id': {
-        'type': 'string',
-        'unique': True
+        'type': 'string'
     }
 }
 
