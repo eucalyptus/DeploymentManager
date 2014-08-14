@@ -13,13 +13,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from config_manager.config import Config
 
 from config_manager.eucalyptus.network import Network
 from config_manager.eucalyptus.system_properties import SystemProperties
 
 
-class Eucalyptus:
+class Eucalyptus(Config):
     def __init__(self):
         self.log_level = None
         self.set_bind_addr = True
@@ -33,6 +33,12 @@ class Eucalyptus:
         self.topology = None
         self.network = None
         self.system_properties = None
+
+        super(Eucalyptus, self).__init__(name=None,
+                                         description=None,
+                                         config_file_path=None,
+                                         objtype=None,
+                                         version=None)
 
     def set_log_level(self, log_level):
         self.log_level = log_level

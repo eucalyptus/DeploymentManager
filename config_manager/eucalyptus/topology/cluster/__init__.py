@@ -17,7 +17,19 @@ from config_manager.config import Config, ConfigProperty
 
 
 class Cluster(Config):
-    def _setup(self, cc_hostname=None, sc_hostname=None):
+    def __init__(self,
+                 name=None,
+                 description=None,
+                 config_file_path=None,
+                 objtype=None,
+                 version=None,
+                 cc_hostname=None,
+                 sc_hostname=None):
+        super(Cluster, self).__init__(name,
+                                      description=None,
+                                      config_file_path=None,
+                                      objtype=None,
+                                      version=None)
         self.cc_hostname = self.create_prop(json_name='cc_hostname',
                                             value=cc_hostname)
         self.sc_hostname = self.create_prop(json_name='sc_hostname',
