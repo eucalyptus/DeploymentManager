@@ -30,10 +30,14 @@
 #
 # Author: Tony Beckham tony@eucalyptus.com
 #
-
+import socket
 import xmlrpclib
 import json
+
+from time import sleep
 from resource_manager.client import ResourceManagerClient
+from paramiko import BadHostKeyException, AuthenticationException, SSHException, SSHClient, AutoAddPolicy
+
 
 class PxeManager(object):
     def __init__(self, server_url, user, password):
@@ -44,6 +48,7 @@ class PxeManager(object):
                        'esxi50': 'qa-vmwareesxi50u1-x86_64',
                        'centos': 'qa-centos6-x86_64-striped-drives',
                        'rhel': 'qa-rhel6u5-x86_64-striped-drives'}
+        self.reservation = []
 
     def get_resource(self, owner, count, job_id, distro):
         """
@@ -56,10 +61,25 @@ class PxeManager(object):
         """
         resources = self.resource_manager.find_resources(field="state", value="idle")['_items']
         for i in range(count):
-            data = json.dumps({'hostname': resources[i]['hostname'], 'owner': owner, 'state': 'pxe', 'job_id': job_id})
+            hostname = resources[i]['hostname']
+            data = json.dumps({'hostname': hostname, 'owner': owner, 'state': 'pxe', 'job_id': job_id})
             self.resource_manager.update_resource(data)
-            print "kickstarting host: " + resources[i]['hostname']
-            self.kickstart_machine(system_name=resources[i]['hostname'], distro=distro)
+            print "kickstarting host: " + hostname
+            self.reservation.append(hostname)
+            self.kickstart_machine(system_name=hostname, distro=distro)
+
+        '''
+        Check that the resources in the reservation are ready
+        '''
+        print "Waiting 2 minutes for systems to boot"
+        sleep(120)
+        for resource in self.reservation:
+            print "Checking status of " + resource
+            if not self.is_system_ready(system_name=resource):
+                self.reservation.remove(resource)
+                self.get_resource(owner=owner, count=1, job_id=job_id, distro=distro)
+
+        print "Request fulfilled."
         return
 
     def kickstart_machine(self, system_name, distro):
@@ -77,15 +97,18 @@ class PxeManager(object):
 
         reboot_args = {"power": "reboot", "systems": [system_name]}
         self.cobbler.background_power_system(reboot_args, self.token)
+        return
 
-        '''
-        TODO: ssh polling here
-
-        If ssh success then update DB otherwise retry
+    def is_system_ready(self, system_name):
+        sys_ip = self.cobbler.get_system(system_name)['interfaces']['eth0']['ip_address']
+        if self.check_ssh(ip=sys_ip):
             data = json.dumps({'hostname': system_name, 'state': 'in_use'})
             self.resource_manager.update_resource(data)
-        '''
-        return
+            return True
+        else:
+            data = json.dumps({'hostname': system_name, 'owner': '', 'state': 'pxe_failed', 'job_id': ''})
+            self.resource_manager.update_resource(data)
+        return False
 
     def free_machines(self, field, value):
         """
@@ -102,3 +125,35 @@ class PxeManager(object):
             data = json.dumps({'hostname': system_name, 'owner': '', 'state': 'idle', 'job_id': ''})
             self.resource_manager.update_resource(data)
         return
+
+    def check_ssh(self, ip, user="root", password="foobar", interval=20, retries=45):
+        """
+        Attempt to ssh to a given host. Default is to try for 15 minutes
+        :param ip: ip of host to try
+        :param user: user to log in as
+        :param password: user login password
+        :param interval: seconds between retries
+        :param retries: number of retries
+        :return:
+        """
+        ssh = SSHClient()
+        ssh.set_missing_host_key_policy(AutoAddPolicy())
+
+        for i in range(retries):
+            try:
+                print "Attempting ssh to " + ip + "....." + str(i+1) + "/" + str(retries)
+                ssh.connect(ip, username=user, password=password)
+                print "Obtained ssh connection to " + ip + "!"
+                return True
+            except (BadHostKeyException, AuthenticationException, SSHException, socket.error) as e:
+                print e
+                sleep(interval)
+        return False
+
+    def get_reservation_as_ip(self):
+        reservation_ips = []
+        for item in self.reservation:
+            reservation_ips.append(self.cobbler.get_system(item)['interfaces']['eth0']['ip_address'])
+        return reservation_ips
+
+

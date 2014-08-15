@@ -23,7 +23,7 @@ setup(name='DeploymentManager',
       url='https://github.com/eucalyptus/DeploymentManager.git',
       license='Apache License 2.0',
       packages=['config_manager'],
-      install_requires=[],
+      install_requires=['paramiko',],
       zip_safe=False,
       classifiers=[
           "Development Status :: 1 - Alpha",
