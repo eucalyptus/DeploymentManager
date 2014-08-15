@@ -6,11 +6,18 @@ requires a MongoDB database for persisting data.
 
 Some example use cases for ResourceManager are tracking IP addresses/ranges, SAN connections, or machine allocations.
 
+Quick Start - CentOS 6
+------
+* Install Chef:  ```curl -L https://www.opscode.com/chef/install.sh | bash```
+* Download the [cookbook tarball](https://github.com/viglesiasce/resource-manager-cookbook/releases/download/0.2.0/resource-man-cookbooks.tgz)
+* Run Chef: ```chef-solo -r resource-man-cookbooks.tgz -o 'recipe[resource-manager]'```
+
 Installation
 ------
 * [Install MongoDB](http://www.mongodb.org/downloads)
+* Run mongodb
 * Clone this repository
-* Install python dependencies: ```pip install Flask Flask-Bootstrap eve```
+* Install python dependencies: ```pip install Flask Flask-Bootstrap eve PrettyTable argparse requests```
 * Run the server: ```cd resource_manager;./server.py```
 
 
@@ -43,7 +50,7 @@ addresses are currently implemented. Public and private addresses share the same
         'owner': {
             'type': 'string'
         }
-    }```
+    }
 
 Interacting with the server
 ------
