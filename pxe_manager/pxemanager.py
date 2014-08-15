@@ -59,11 +59,6 @@ class PxeManager(object):
         :return:
         """
         resources = self.resource_manager.find_resources(field="state", value="idle")['_items']
-        '''
-        debug
-        '''
-        print "PM count: " + count
-        print "PM resource count: " + str(len(resources))
         if len(resources) < count:
             print "Oops...There are not enough free resources to fill your request."
             return
