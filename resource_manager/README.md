@@ -6,6 +6,12 @@ requires a MongoDB database for persisting data.
 
 Some example use cases for ResourceManager are tracking IP addresses/ranges, SAN connections, or machine allocations.
 
+Quick Start - CentOS 6
+------
+* Install Chef:  ```curl -L https://www.opscode.com/chef/install.sh | bash```
+* Download the [cookbook tarball](https://github.com/viglesiasce/resource-manager-cookbook/releases/download/0.1.0/resource-man-cookbooks.tgz)
+* Run Chef: ```chef-solo -r resource-man-cookbooks.tgz -o 'recipe[resource-manager]'```
+
 Installation
 ------
 * [Install MongoDB](http://www.mongodb.org/downloads)
