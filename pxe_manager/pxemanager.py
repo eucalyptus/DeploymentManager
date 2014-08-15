@@ -154,9 +154,9 @@ class PxeManager(object):
                 sleep(interval)
         return False
 
-    def get_reservation_as_ip(self):
+    def get_reservation_as_ip(self, reservation):
         reservation_ips = []
-        for item in self.reservation:
+        for item in reservation:
             reservation_ips.append(self.cobbler.get_system(item)['interfaces']['eth0']['ip_address'])
         return reservation_ips
 
