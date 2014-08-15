@@ -59,6 +59,11 @@ class ConfigProperty(object):
     def update(self):
         value = self.validate(self.value)
 
+    def __repr__(self):
+        return "{0}: key:{1}, value:{2}".format(self.__class__.__name__,
+                                                self.name,
+                                                self.value)
+
 
 
 class BaseConfig(object):
@@ -183,12 +188,19 @@ class BaseConfig(object):
         pass
 
     def _sanitize_json(self, json_dict):
-            new_dict = copy.copy(json_dict)
-            assert isinstance(json_dict, dict)
-            for key in json_dict:
-                if not json_dict[key]:
-                    new_dict.__delitem__(key)
-            return new_dict
+        """
+        By default do not write json values which have null or empty content.
+        This is to avoid deleting attributes unintentionally in the end
+        system being deployed managed until additional mechanisms are put in
+        place.
+        This can be overwritten by child classes.
+        """
+        new_dict = copy.copy(json_dict)
+        assert isinstance(json_dict, dict)
+        for key in json_dict:
+            if not json_dict[key]:
+                new_dict.__delitem__(key)
+        return new_dict
 
     def to_json(self):
         """

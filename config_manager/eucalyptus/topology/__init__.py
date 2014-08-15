@@ -45,6 +45,9 @@ class Topology(BaseConfig):
             assert isinstance(cluster, Cluster), 'add clusters passed non ' \
                                                  'cluster type, cluster:"{0}"'\
                                                  .format(cluster)
+            if self.get_cluster(cluster.name.value):
+                raise ValueError('Cluster with name:"{0}" already exists'
+                                 .format(cluster.name.value))
             self.clusters_property.value.append(cluster)
 
     def create_cluster(self, name, cc_hostname=None, sc_hostname=None):
@@ -54,9 +57,9 @@ class Topology(BaseConfig):
         self.add_clusters(cluster)
 
     def get_cluster(self, clustername):
-        clusters = self.clusters_property.get()
+        clusters = self.clusters_property.value
         for cluster in clusters:
-            if cluster.name == clustername:
+            if cluster.name.value == clustername:
                 return cluster
         return None
 
@@ -64,7 +67,7 @@ class Topology(BaseConfig):
     def delete_cluster(self, clustername):
         cluster = self.get_cluster(clustername)
         if cluster:
-            clusters = self.clusters_property.get()
+            clusters = self.clusters_property.value
             clusters.remove(cluster)
             self.clusters_property.update()
 
@@ -78,7 +81,7 @@ class Topology(BaseConfig):
         if self.cloud_controllers_property is None:
             self.cloud_controllers_property = []
         for clc in clcs:
-            self.cloud_controllers_property.get().append(clc)
+            self.cloud_controllers_property.value.append(clc)
 
     def add_walrus(self, walrus):
         self.walrus = walrus
