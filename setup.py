@@ -22,7 +22,7 @@ except ImportError:
 
 setup(name='deploymentmanager',
       version='0.1',
-      description='Eucalyptus Configuration Input/Output',
+      description='Eucalyptus Deployment and Configuration Management tools',
       url='https://github.com/eucalyptus/DeploymentManager.git',
       license='Apache License 2.0',
       packages=find_packages(),
