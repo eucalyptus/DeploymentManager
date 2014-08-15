@@ -69,9 +69,9 @@ class ConfigProperty(object):
         value = self.validate(self.value)
 
     def __repr__(self):
-        return "{0}: key:{1}, value:{2}".format(self.__class__.__name__,
-                                                self.name,
-                                                self.value)
+        return '{0}: key:"{1}" --> "{2}"'.format(self.__class__.__name__,
+                                                    self.name,
+                                                    self.value)
 
 
 
