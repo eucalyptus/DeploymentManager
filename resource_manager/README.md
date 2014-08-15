@@ -9,7 +9,7 @@ Some example use cases for ResourceManager are tracking IP addresses/ranges, SAN
 Quick Start - CentOS 6
 ------
 * Install Chef:  ```curl -L https://www.opscode.com/chef/install.sh | bash```
-* Download the [cookbook tarball](https://github.com/viglesiasce/resource-manager-cookbook/releases/download/0.1.0/resource-man-cookbooks.tgz)
+* Download the [cookbook tarball](https://github.com/viglesiasce/resource-manager-cookbook/releases/download/0.2.0/resource-man-cookbooks.tgz)
 * Run Chef: ```chef-solo -r resource-man-cookbooks.tgz -o 'recipe[resource-manager]'```
 
 Installation
@@ -17,7 +17,7 @@ Installation
 * [Install MongoDB](http://www.mongodb.org/downloads)
 * Run mongodb
 * Clone this repository
-* Install python dependencies: ```pip install Flask Flask-Bootstrap eve PrettyTable```
+* Install python dependencies: ```pip install Flask Flask-Bootstrap eve PrettyTable argparse requests```
 * Run the server: ```cd resource_manager;./server.py```
 
 
