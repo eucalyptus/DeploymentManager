@@ -15,8 +15,8 @@
 # limitations under the License.
 from config_manager.config import Config
 
-from config_manager.eucalyptus.network import Network
-from config_manager.eucalyptus.system_properties import SystemProperties
+#from config_manager.eucalyptus.network import Network
+#from config_manager.eucalyptus.system_properties import SystemProperties
 
 
 class Eucalyptus(Config):
@@ -25,7 +25,7 @@ class Eucalyptus(Config):
                                          description=None,
                                          config_file_path=None,
                                          version=None)
-        self.log_level = None
+        self.create_prop('log-level')
         self.set_bind_addr = True
         self.install_load_balancer = True
         self.install_imaging_worker = True

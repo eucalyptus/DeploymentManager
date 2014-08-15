@@ -20,26 +20,79 @@ from pprint import pformat
 from shutil import copyfile
 import difflib
 
+class JsonMapping(object):
+    def __init__(self, json_name, configmanager, value=None, validate=None):
+        assert isinstance(configmanager, Config)
+        self.configmanager = configmanager
+        self.name = json_name
+        if validate:
+            self.validate = validate
+        self.set(value)
+        self.__doc__ = "Mapping to allow json property: {0} manipulation"\
+            .format(json_name)
 
-class PropertyManager(object):
+    def set(self, value):
+        if value is None:
+            return self.configmanager._del_json_property(self.name)
+        return self.configmanager._set_json_property(self.name, value)
+
+    def get(self):
+        return self.configmanager._get_json_property(self.name)
+
+    def delete(self):
+        self.configmanager._del_json_property(self.name)
+
+    def validate(self, value):
+        pass
+
+    def reset(self):
+        pass
+
+
+class Config(object):
+    """
+    Intention of this class is to provide utilities around reading and writing
+    CLI environment related configuration.
+    """
     def __init__(self,
-                 name=None,
+                 name,
                  description=None,
-                 version=None,
-                 **kwargs):
+                 config_file_path=None,
+                 objtype=None,
+                 version=None):
+        """
+        Creates a base Config() object. This object is a basic python
+        representation of a textual configuration(file). This configuration
+        is currently described using JSON. This class provides utilities to
+        read, write, map, save, compare, and validate python attributes to a
+        json configuration.
+        :param name: string. The name of this config section
+        :param config_file_path: Optional.string. Local path this config obj
+                                 should read/write
+        :param type: Optional. string. Identifier for this config object.
+        :param version: Optional. string. can be used to version a config
+        :param kwargs: Optional set of key word args which will be passed to
+                       to the local user defined _setup() method.
+        """
+        # Set name and config file path first to allow updating base values
+        # from an existing file
         self._json_properties = {}
         # Set name and config file path first to allow updating base values
         # from an existing file
-        self.name = name
+        name = name
         if not name:
-            self.name = self.__class__.__name__.lower()
+            name = self.__class__.__name__.lower()
 
         self.default_attributes = {}
         #Now overwrite with any params provided
-        self.name = self.create_prop('name', self.name)
+        self.name = JsonMapping(json_name=)
         self.objtype = self.create_prop('objtype', self.__class__.__name__)
         self.version = self.create_prop('version', version)
         self.description = self.create_prop('description', description)
+
+        self.config_file_path = config_file_path
+        self.update_from_file()
+        self.default_attributes = {}
 
     def _get_json_property(self, property_name):
         """
@@ -65,60 +118,11 @@ class PropertyManager(object):
         Default string representation of this object will be the formatted
         json configuration
         """
-        return self.to_json()
-
-    def create_prop(self,
-                 json_name,
-                 value=None,
-                 docstring=None,
-                 validate_callback=None):
-        """
-        Dynamically add properties which will be used to build json
-        representation of this object for configuration purposes. Allows
-        values to be accessed as both a local python attribute/property of
-        this object, and store that value in a formatted dict for json
-        conversion. The setter can also be created with a validation
-        method which is called before writing to the json dict storing the
-        value. Note that the validator must return the value which will be
-        stored. This allows for the value to be formatted/manipulated before
-        storing.
-
-        :param json_name: The name used to store the value in self._json_dict
-        :param value: optional value to store. Defaults to 'None'
-        :param docstring: optional docstring to be used with creating the
-                          dynamic python property
-        :param validate_callback: optional method, if provided this method can
-                                  be used validate or convert the value before
-                                  storing.
-        """
-        config_obj = self
-        docstring = docstring or "Updates json dict for value:'{0}'"\
-            .format(json_name)
-
-        def temp_prop_getter():
-            return config_obj._get_json_property(json_name)
-
-        def temp_prop_setter(newvalue):
-            print 'setting ' + str(json_name) +  ' to value:' + str(newvalue)
-            # If a validation callback was provided use it, otherwise
-            # allow the user to create a local method named
-            # by '_validate_' + the python_name provided which will be
-            # called. A validation method is optional but if defined,
-            # must return the value to be set for this property.
-            validate = validate_callback or getattr(config_obj,
-                                                    '_validate_' + json_name,
-                                                    None)
-            if validate:
-                newvalue = validate(newvalue)
-            return config_obj._set_json_property(json_name, newvalue)
-
-        def temp_prop_delete():
-            config_obj._del_json_property(json_name)
-        temp_prop = property(fget=temp_prop_getter, fset=temp_prop_setter,
-                             fdel=temp_prop_delete, doc=docstring)
-        #setattr(self.__class__, python_name, temp_prop)
-        config_obj._set_json_property(json_name, value)
-        return temp_prop
+        buf = ""
+        for key in self.__dict__:
+            buf += "{0}  ---> {1}\n".format(key, self.__dict__[key])
+        buf += "json:\n{0}".format(self.to_json())
+        return buf
 
     def del_prop(self, property_name):
         prop = getattr(self, property_name, None)
@@ -153,44 +157,6 @@ class PropertyManager(object):
                           default=lambda o: o._json_properties,
                           sort_keys=True,
                           indent=4)
-
-
-class Config(PropertyManager):
-    """
-    Intention of this class is to provide utilities around reading and writing
-    CLI environment related configuration.
-    """
-    def __init__(self,
-                 name,
-                 description=None,
-                 config_file_path=None,
-                 objtype=None,
-                 version=None,
-                 **kwargs):
-        """
-        Creates a base Config() object. This object is a basic python
-        representation of a textual configuration(file). This configuration
-        is currently described using JSON. This class provides utilities to
-        read, write, map, save, compare, and validate python attributes to a
-        json configuration.
-        :param name: string. The name of this config section
-        :param config_file_path: Optional.string. Local path this config obj
-                                 should read/write
-        :param type: Optional. string. Identifier for this config object.
-        :param version: Optional. string. can be used to version a config
-        :param kwargs: Optional set of key word args which will be passed to
-                       to the local user defined _setup() method.
-        """
-        # Set name and config file path first to allow updating base values
-        # from an existing file
-        super(Config, self).__init__(name=name,
-                                     description=description,
-                                     objtype=objtype,
-                                     version=version,
-                                     kwargs=kwargs)
-        self.config_file_path = config_file_path
-        self.update_from_file()
-        self.default_attributes = {}
 
     def _get_formatted_conf(self):
         return pformat(vars(self))
