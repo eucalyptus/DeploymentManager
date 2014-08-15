@@ -23,9 +23,10 @@ import difflib
 import config_manager
 
 class ConfigProperty(object):
+    DEFAULT_NOT_DEFINED = "DEFAULT NOT DEFINED"
     def __init__(self, json_name, configmanager, value=None,
                  validate_callback=None, reset_callback=None,
-                 default_value=None):
+                 default_value=DEFAULT_NOT_DEFINED):
         assert isinstance(configmanager, BaseConfig)
         self.configmanager = configmanager
         self.name = json_name
@@ -35,6 +36,7 @@ class ConfigProperty(object):
             self.reset = reset_callback
         #self.set(value)
         self.value = value
+        self.default_value = default_value
         self.__doc__ = "Mapping to allow json property: {0} manipulation"\
             .format(json_name)
 
@@ -53,7 +55,14 @@ class ConfigProperty(object):
     def validate(self, value):
         return value
 
-    def reset(self):
+    def reset_to_default(self):
+        if self.default_value == self.DEFAULT_NOT_DEFINED:
+           return
+        else:
+            self.value = self.default_value
+
+    #todo add this once BaseConfig is ready to handle it
+    def reset_to_file(self):
         pass
 
     def update(self):
@@ -156,10 +165,15 @@ class BaseConfig(object):
         Default string representation of this object will be the formatted
         json configuration
         """
-        buf = ""
+        buf = "Local Attributes:\n"
+        config_properties = "Config Properties:\n"
         for key in self.__dict__:
-            buf += "{0}  ---> {1}\n".format(key, self.__dict__[key])
-        buf += "json:\n{0}".format(self.to_json())
+            if isinstance(self.__dict__[key], ConfigProperty):
+                config_properties += "\t{0}\n".format(self.__dict__[key])
+            else:
+                buf += "\t{0}  ---> {1}\n".format(key, self.__dict__[key])
+        buf += config_properties
+        buf += "Current JSON Config:\n{0}".format(self.to_json())
         return buf
 
     def del_prop(self, property_name):
