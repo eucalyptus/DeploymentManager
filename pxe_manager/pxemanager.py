@@ -40,10 +40,10 @@ from paramiko import BadHostKeyException, AuthenticationException, SSHException,
 
 
 class PxeManager(object):
-    def __init__(self, server_url, user, password):
-        self.cobbler = xmlrpclib.Server(server_url)
-        self.token = self.cobbler.login(user, password)
-        self.resource_manager = ResourceManagerClient()
+    def __init__(self, cobbler_url, cobbler_user, cobbler_password, resource_manager_client):
+        self.cobbler = xmlrpclib.Server(cobbler_url)
+        self.token = self.cobbler.login(cobbler_user, cobbler_password)
+        self.resource_manager = resource_manager_client
         self.distro = {'esxi51': 'qa-vmwareesxi51u0-x86_64',
                        'esxi50': 'qa-vmwareesxi50u1-x86_64',
                        'centos': 'qa-centos6-x86_64-striped-drives',
