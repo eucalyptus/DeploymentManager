@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import copy
 import os
 import json
 from pprint import pformat
@@ -32,26 +33,32 @@ class ConfigProperty(object):
             self.validate = validate_callback
         if reset_callback:
             self.reset = reset_callback
-        self.set(value)
+        #self.set(value)
+        self.value = value
         self.__doc__ = "Mapping to allow json property: {0} manipulation"\
             .format(json_name)
 
-    def set(self, value):
-        if value is None:
-            return self.configmanager._del_json_property(self.name)
-        return self.configmanager._set_json_property(self.name, value)
-
-    def get(self):
+    @property
+    def value(self):
         return self.configmanager._get_json_property(self.name)
+
+    @value.setter
+    def value(self, newvalue):
+        newvalue = self.validate(newvalue)
+        return self.configmanager._set_json_property(self.name, newvalue)
 
     def delete(self):
         self.configmanager._del_json_property(self.name)
 
     def validate(self, value):
-        pass
+        return value
 
     def reset(self):
         pass
+
+    def update(self):
+        value = self.validate(self.value)
+
 
 
 class BaseConfig(object):
@@ -89,11 +96,8 @@ class BaseConfig(object):
         # from an existing file
         property_type = property_type or self.__class__.__name__.lower()
         version = version or config_manager.__version__
-        self.default_attributes = {}
         #Now overwrite with any params provided
-        self.name = ConfigProperty(json_name='name',
-                                configmanager=self,
-                                value=name)
+        self.name = self.create_property('name', name)
         self.property_type = self.create_property('property_type',
                                                   property_type)
         self.version = self.create_property('version', version)
@@ -104,6 +108,15 @@ class BaseConfig(object):
         self.update_from_file()
         self.default_attributes = {}
 
+
+    def __setattr__(self, key, value, force=False):
+        attr = getattr(self, key, None)
+        if attr and isinstance(attr, ConfigProperty) and not force:
+                raise AttributeError('ConfigProperty types are ready-only, '
+                                     'did you mean to set {0}.value?'
+                                     .format(key))
+        else:
+            self.__dict__[key] = value
 
     def create_property(self, json_name, value=None, validate_callback=None,
                      reset_callback=None, default_value=None):
@@ -169,12 +182,20 @@ class BaseConfig(object):
         """
         pass
 
+    def _sanitize_json(self, json_dict):
+            new_dict = copy.copy(json_dict)
+            assert isinstance(json_dict, dict)
+            for key in json_dict:
+                if not json_dict[key]:
+                    new_dict.__delitem__(key)
+            return new_dict
+
     def to_json(self):
         """
         converts the local dict '_json_properties{} to json
         """
         return json.dumps(self,
-                          default=lambda o: o._json_properties,
+                          default=lambda o: o._sanitize_json(o._json_properties),
                           sort_keys=True,
                           indent=4)
 
