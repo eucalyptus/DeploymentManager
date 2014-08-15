@@ -23,9 +23,10 @@ class Eucalyptus(BaseConfig):
     def __init__(self):
         super(Eucalyptus, self).__init__(name=None,
                                          description=None,
-                                         config_file_path=None,
+                                         write_file_path=None,
+                                         read_file_path=None,
                                          version=None)
-        self.create_prop('log-level')
+        self.create_property(json_name='log-level')
         self.set_bind_addr = True
         self.install_load_balancer = True
         self.install_imaging_worker = True

@@ -20,7 +20,8 @@ class Topology(BaseConfig):
     def __init__(self, name=None):
         super(Topology, self).__init__(name=name,
                                        description=None,
-                                       config_file_path=None,
+                                       write_file_path=None,
+                                       read_file_path=None,
                                        version=None)
 
         self.cloud_controller = None
