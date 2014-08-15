@@ -60,6 +60,10 @@ class PxeManager(object):
         :return:
         """
         resources = self.resource_manager.find_resources(field="state", value="idle")['_items']
+        if len(resources) < count:
+            print "Oops...There are not enough free resources to fill your request."
+            return
+
         for i in range(count):
             hostname = resources[i]['hostname']
             data = json.dumps({'hostname': hostname, 'owner': owner, 'state': 'pxe', 'job_id': job_id})
@@ -76,6 +80,7 @@ class PxeManager(object):
         for resource in self.reservation:
             print "Checking status of " + resource
             if not self.is_system_ready(system_name=resource):
+                print "Host was not ready within allotted time. Attempting to allocate another machine."
                 self.reservation.remove(resource)
                 self.get_resource(owner=owner, count=1, job_id=job_id, distro=distro)
 
