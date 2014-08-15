@@ -9,8 +9,9 @@ Some example use cases for ResourceManager are tracking IP addresses/ranges, SAN
 Installation
 ------
 * [Install MongoDB](http://www.mongodb.org/downloads)
+* Run mongodb
 * Clone this repository
-* Install python dependencies: ```pip install Flask Flask-Bootstrap eve```
+* Install python dependencies: ```pip install Flask Flask-Bootstrap eve PrettyTable```
 * Run the server: ```cd resource_manager;./server.py```
 
 
@@ -43,7 +44,7 @@ addresses are currently implemented. Public and private addresses share the same
         'owner': {
             'type': 'string'
         }
-    }```
+    }
 
 Interacting with the server
 ------
