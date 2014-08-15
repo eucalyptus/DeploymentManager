@@ -13,10 +13,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from config_manager.config import Config
+from config_manager.baseconfig import BaseConfig
 
 
-class Topology(Config):
+class Topology(BaseConfig):
     def __init__(self, name=None):
         super(Topology, self).__init__(name=name,
                                        description=None,

@@ -19,14 +19,19 @@ import json
 from pprint import pformat
 from shutil import copyfile
 import difflib
+import config_manager
 
-class JsonMapping(object):
-    def __init__(self, json_name, configmanager, value=None, validate=None):
-        assert isinstance(configmanager, Config)
+class ConfigProperty(object):
+    def __init__(self, json_name, configmanager, value=None,
+                 validate_callback=None, reset_callback=None,
+                 default_value=None):
+        assert isinstance(configmanager, BaseConfig)
         self.configmanager = configmanager
         self.name = json_name
-        if validate:
-            self.validate = validate
+        if validate_callback:
+            self.validate = validate_callback
+        if reset_callback:
+            self.reset = reset_callback
         self.set(value)
         self.__doc__ = "Mapping to allow json property: {0} manipulation"\
             .format(json_name)
@@ -49,16 +54,17 @@ class JsonMapping(object):
         pass
 
 
-class Config(object):
+class BaseConfig(object):
     """
     Intention of this class is to provide utilities around reading and writing
     CLI environment related configuration.
     """
     def __init__(self,
-                 name,
+                 name=None,
                  description=None,
-                 config_file_path=None,
-                 objtype=None,
+                 read_file_path=None,
+                 write_file_path=None,
+                 property_type=None,
                  version=None):
         """
         Creates a base Config() object. This object is a basic python
@@ -67,8 +73,10 @@ class Config(object):
         read, write, map, save, compare, and validate python attributes to a
         json configuration.
         :param name: string. The name of this config section
-        :param config_file_path: Optional.string. Local path this config obj
-                                 should read/write
+        :param read_file_path: Optional. String. Local path this config obj
+                                 should read from
+        :param write_file_path: Optional. String. Local path this config obj
+                                should write to
         :param type: Optional. string. Identifier for this config object.
         :param version: Optional. string. can be used to version a config
         :param kwargs: Optional set of key word args which will be passed to
@@ -79,20 +87,32 @@ class Config(object):
         self._json_properties = {}
         # Set name and config file path first to allow updating base values
         # from an existing file
-        name = name
-        if not name:
-            name = self.__class__.__name__.lower()
-
+        property_type = property_type or self.__class__.__name__.lower()
+        version = version or config_manager.__version__
         self.default_attributes = {}
         #Now overwrite with any params provided
-        self.name = JsonMapping(json_name=)
-        self.objtype = self.create_prop('objtype', self.__class__.__name__)
-        self.version = self.create_prop('version', version)
-        self.description = self.create_prop('description', description)
+        self.name = ConfigProperty(json_name='name',
+                                configmanager=self,
+                                value=name)
+        self.property_type = self.create_property('property_type',
+                                                  property_type)
+        self.version = self.create_property('version', version)
+        self.description = self.create_property('description', description)
 
-        self.config_file_path = config_file_path
+        self.read_file_path = read_file_path
+        self.write_file_path = write_file_path
         self.update_from_file()
         self.default_attributes = {}
+
+
+    def create_property(self, json_name, value=None, validate_callback=None,
+                     reset_callback=None, default_value=None):
+        return ConfigProperty(json_name=json_name,
+                           configmanager=self,
+                           value=value,
+                           validate_callback=validate_callback,
+                           reset_callback=reset_callback,
+                           default_value=default_value)
 
     def _get_json_property(self, property_name):
         """
@@ -169,7 +189,7 @@ class Config(object):
         Attempts to read in json from an existing file, load and return as
         a dict
         """
-        file_path = file_path or self.config_file_path
+        file_path = file_path or self.read_file_path
         newdict = None
         if os.path.exists(str(file_path)) and os.path.getsize(str(file_path)):
             if not os.path.isfile(file_path):
@@ -188,7 +208,7 @@ class Config(object):
         return newdict
 
     def update_from_file(self, file_path=None):
-        file_path = file_path or self.config_file_path
+        file_path = file_path or self.read_file_path
         if not file_path:
             return
         newdict = self._get_dict_from_file(file_path=file_path)
@@ -224,20 +244,41 @@ class Config(object):
         #Create formatted string representation of dict values
         text1 = self.to_json().splitlines()
         #Create formatted string representation of values in file
-        file_path = file_path or self.config_file_path
+        file_path = file_path or self.read_file_path
         file_dict = self._get_dict_from_file(file_path=file_path) or {}
         text2 = json.dumps(file_dict, sort_keys=True, indent=4).splitlines()
         diff = difflib.unified_diff(text2, text1, lineterm='')
         return str('\n'.join(diff))
 
+    def diff_from_default(self):
+        """
+        Compare current configuration to a set of default values.
+        """
+        raise NotImplementedError('diff_from_default not implemented yet')
+        pass
+
+    def diff_from_write_path(self):
+        if self.write_file_path:
+            return self.diff(file_path=self.write_file_path)
+        else:
+            print "No write file path defined to compare to"
+            return None
+
+    def diff_from_read_path(self):
+        if self.read_file_path:
+            return self.diff(file_path=self.read_file_path)
+        else:
+            print "No read file path defined to compare to"
+            return None
+
     def save(self, path=None):
         """
         Will write the json configuration to a file at path or by default at
-        self.config_file_path.
+        self.write_file_path.
         """
-        path = path or self.config_file_path
+        path = path or self.write_file_path
         if not path:
-            raise ValueError('Path/config_file_path has not been set '
+            raise ValueError('Path/write_file_path has not been set '
                              'or provided.')
         backup_path = path + '.bak'
         config_json = self.to_json()

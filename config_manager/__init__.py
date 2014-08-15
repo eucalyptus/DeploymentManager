@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+s#!/usr/bin/env python
 
 # Copyright 2009-2014 Eucalyptus Systems, Inc.
 #

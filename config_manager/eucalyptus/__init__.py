@@ -13,13 +13,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from config_manager.config import Config
+from config_manager.baseconfig import BaseConfig
 
 #from config_manager.eucalyptus.network import Network
 #from config_manager.eucalyptus.system_properties import SystemProperties
 
 
-class Eucalyptus(Config):
+class Eucalyptus(BaseConfig):
     def __init__(self):
         super(Eucalyptus, self).__init__(name=None,
                                          description=None,

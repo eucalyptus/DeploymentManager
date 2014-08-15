@@ -13,10 +13,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from config_manager.config import Config
+from config_manager.baseconfig import BaseConfig
 
 
-class Cluster(Config):
+class Cluster(BaseConfig):
     def __init__(self,
                  name=None,
                  description=None,
@@ -43,7 +43,7 @@ class Cluster(Config):
         }
 
 
-class NodeControllers(Config):
+class NodeControllers(BaseConfig):
     def __init__(self):
         self.max_cores = 8
         self.cache_size = 40000

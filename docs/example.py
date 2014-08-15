@@ -2,7 +2,7 @@
 
 import json
 
-from config_manager.config import Config
+from config_manager.config import BaseConfig
 from config_manager.eucalyptus.enterprise import Enterprise
 from config_manager.eucalyptus.packages import Packages
 from config_manager.eucalyptus.system_properties import SystemProperties
@@ -58,7 +58,7 @@ eucalyptus.add_enterprise_credentials(enterprise)
 eucalyptus.add_packages(packages)
 
 # finally build a config and add Attributes
-config = Config('my-awesome-config', description='my awesome config')
+config = BaseConfig('my-awesome-config', description='my awesome config')
 config.add_config(eucalyptus)
 
 # print json.dumps(eucalyptus.to_dict(),
