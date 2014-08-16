@@ -14,6 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from config_manager.baseconfig import BaseConfig
+from config_manager.eucalyptus.topology.cluster import Cluster
+from config_manager.eucalyptus.topology.cloud_controller import CloudController
+from config_manager.eucalyptus.topology.walrus import Walrus
+from config_manager.eucalyptus.topology.ufs import UserFacingServices
 
 
 class Topology(BaseConfig):
@@ -24,18 +28,60 @@ class Topology(BaseConfig):
                                        read_file_path=None,
                                        version=None)
 
-        self.cloud_controller = None
-        self.walrus = None
-        self.user_facing = None
-        self.clusters = self.create_prop('clusters', value=[])
+        self.cloud_controllers_property = \
+            self.create_property('cloud_controller')
+        self.walrus_property = self.create_property('walrus')
+        self.user_facing_services_property = \
+            self.create_property('user_facing')
+        self.clusters_property = self.create_property('clusters', value=[])
 
-    def add_cluster(self, clusters):
+    def add_clusters(self, clusters):
+        if not clusters:
+            raise ValueError('add_clusters provided empty value: "{0}"'
+                             .format(clusters))
+        if not isinstance(clusters, list):
+            clusters = [clusters]
         for cluster in clusters:
-            mycluster = cluster.to_dict()
-            self.clusters.update(mycluster)
+            assert isinstance(cluster, Cluster), 'add clusters passed non ' \
+                                                 'cluster type, cluster:"{0}"'\
+                                                 .format(cluster)
+            if self.get_cluster(cluster.name.value):
+                raise ValueError('Cluster with name:"{0}" already exists'
+                                 .format(cluster.name.value))
+            self.clusters_property.value.append(cluster)
 
-    def add_cloud_controller(self, clc):
-        self.cloud_controller = clc
+    def create_cluster(self, name, cc_hostname=None, sc_hostname=None):
+        cluster = Cluster(name,
+                          cc_hostname=cc_hostname,
+                          sc_hostname=sc_hostname)
+        self.add_clusters(cluster)
+
+    def get_cluster(self, clustername):
+        clusters = self.clusters_property.value
+        for cluster in clusters:
+            if cluster.name.value == clustername:
+                return cluster
+        return None
+
+
+    def delete_cluster(self, clustername):
+        cluster = self.get_cluster(clustername)
+        if cluster:
+            clusters = self.clusters_property.value
+            clusters.remove(cluster)
+            self.clusters_property.update()
+
+
+    def add_cloud_controllers(self, clcs):
+        if clcs is None:
+            raise ValueError('add_cloud_controllers provided empty '
+                             'value: "{0}"'.format(clcs))
+        if not isinstance(clcs, list):
+            clcs = [clcs]
+        if self.cloud_controllers_property is None:
+            self.cloud_controllers_property = []
+        for clc in clcs:
+            self.cloud_controllers_property.value.append(clc)
 
     def add_walrus(self, walrus):
         self.walrus = walrus

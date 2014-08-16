@@ -27,17 +27,17 @@ class Eucalyptus(BaseConfig):
                                          read_file_path=None,
                                          version=None)
         self.create_property(json_name='log-level')
-        self.set_bind_addr = True
-        self.install_load_balancer = True
-        self.install_imaging_worker = True
-        self.eucalyptus_repo = None
-        self.euca2ools_repo = None
-        self.enterprise_repo = None
-        self.enterprise = None
-        self.node_controllers = None
-        self.topology = None
-        self.network = None
-        self.system_properties = None
+        self.create_property('set_bind_addr', value=True)
+        self.create_property('install_load_balancer', value=True)
+        self.create_property('install_imaging_worker', value=True)
+        self.create_property('eucalyptus_repo')
+        self.create_property('euca2ools_repo')
+        self.create_property('enterprise_repo')
+        self.create_property('enterprise')
+        self.create_property('node_controllers')
+        self.create_property('topology')
+        self.create_property('network')
+        self.create_property('system_properties')
 
     def set_log_level(self, log_level):
         self.log_level = log_level
