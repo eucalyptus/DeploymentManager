@@ -62,19 +62,15 @@ class ResourceManagerClient(object):
         if deleted_resource.status_code != 200:
             raise RequestFailureException(deleted_resource)
 
-    def print_resources(self):
-        items = requests.get(self.endpoint, auth=self.auth).json()["_items"]
-        table = PrettyTable(self.fields)
-        for resource in items:
-            table.add_row([resource.get(field, None) for field in self.fields])
-        print table.get_string(fields=self.fields)
-
     def find_resources(self, field, value):
         query = self.endpoint + "?where=" + field + "==\"" + value + "\""
         resource_request = requests.get(query, auth=self.auth)
         if resource_request.status_code != 200:
             raise RequestFailureException(resource_request)
         return resource_request.json()
+
+    def get_all_resources(self):
+        return requests.get(self.endpoint, auth=self.auth).json()["_items"]
 
 if __name__ == "__main__":
     resources = ['machines', 'public-addresses', 'private-addresses']
@@ -90,7 +86,11 @@ if __name__ == "__main__":
     if args.operation == 'create':
         client.create_resource(args.json)
     elif args.operation == 'list':
-        client.print_resources()
+        items = client.get_all_resources()
+        table = PrettyTable(client.fields)
+        for resource in items:
+            table.add_row([resource.get(field, None) for field in client.fields])
+        print table.get_string(fields=client.fields)
     elif args.operation == 'update':
         client.update_resource(args.json)
     elif args.operation == 'delete':
