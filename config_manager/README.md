@@ -15,6 +15,7 @@ Goals
 ------
 
 This library hopes to provide utilities which:
+
 * read from an existing configuration, validate and objectify in python
 * write/print/save a json representation of the current object tree to local path
 * map json to pthon attributes
