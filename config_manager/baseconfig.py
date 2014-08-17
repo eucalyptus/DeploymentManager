@@ -41,7 +41,7 @@ class ConfigProperty(object):
             self.validate = validate_callback
         if reset_callback:
             self.reset = reset_callback
-        #self.set(value)
+        # self.set(value)
         self.value = value
         self.default_value = default_value
         self.__doc__ = "Mapping to allow json property: {0} manipulation" \
@@ -68,7 +68,7 @@ class ConfigProperty(object):
         else:
             self.value = self.default_value
 
-    #todo add this once BaseConfig is ready to handle it
+    # todo add this once BaseConfig is ready to handle it
     def reset_to_file(self):
         pass
 
@@ -121,7 +121,7 @@ class BaseConfig(object):
         # from an existing file
         property_type = property_type or self.__class__.__name__.lower()
         version = version or config_manager.__version__
-        #Now overwrite with any params provided
+        # Now overwrite with any params provided
         self.name = self.create_property('name', name)
         self.property_type = self.create_property('property_type',
                                                   property_type)
@@ -193,7 +193,7 @@ class BaseConfig(object):
                 return attr
         return None
 
-    #todo define how validation methods for each config subclass should be used
+    # todo define how validation methods for each config subclass should be used
     def validate(self):
         """
         Method to validate configuration. This would likely be checks
@@ -270,7 +270,7 @@ class BaseConfig(object):
         if newdict:
             for key in newdict:
                 value = newdict[key]
-                if not key in self._json_properties:
+                if key not in self._json_properties:
                     print ('warning "{0}" not found in json properties for '
                            'class: "{1}"'.format(key, self.__class__))
                 else:
@@ -281,7 +281,7 @@ class BaseConfig(object):
                     else:
                         attr.fset(value)
 
-    #todo define how/if this method should be used, examples, etc..
+    # todo define how/if this method should be used, examples, etc..
     def send(self, filehandle=None):
         """
         Method which defines how, where, when etc a config should be written.
@@ -298,9 +298,9 @@ class BaseConfig(object):
         """
         if not file_path:
             raise ValueError('File path must be provided for diff()')
-        #Create formatted string representation of dict values
+        # Create formatted string representation of dict values
         text1 = self.to_json().splitlines()
-        #Create formatted string representation of values in file
+        # Create formatted string representation of values in file
         file_dict = self._get_dict_from_file(file_path=file_path) or {}
         text2 = json.dumps(file_dict, sort_keys=True, indent=4).splitlines()
         diff = difflib.unified_diff(text2, text1, lineterm='')

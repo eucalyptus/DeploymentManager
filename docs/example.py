@@ -55,7 +55,7 @@ eucalyptus.set_log_level('DEBUG')
 eucalyptus.add_topology(topology)
 eucalyptus.add_network(network)
 eucalyptus.add_system_properties(system_properties)
-## eucalyptus.add_node_controller_params()
+# eucalyptus.add_node_controller_params()
 eucalyptus.add_enterprise_credentials(enterprise)
 eucalyptus.add_packages(packages)
 

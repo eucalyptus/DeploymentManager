@@ -15,8 +15,8 @@
 # limitations under the License.
 from config_manager.baseconfig import BaseConfig
 
-#from config_manager.eucalyptus.network import Network
-#from config_manager.eucalyptus.system_properties import SystemProperties
+# from config_manager.eucalyptus.network import Network
+# from config_manager.eucalyptus.system_properties import SystemProperties
 
 
 class Eucalyptus(BaseConfig):
