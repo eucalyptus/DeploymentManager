@@ -90,7 +90,7 @@ if __name__ == "__main__":
         table = PrettyTable(client.fields)
         for resource in items:
             table.add_row([resource.get(field, None) for field in client.fields])
-        print table.get_string(fields=client.fields)
+        print(table.get_string(fields=client.fields))
     elif args.operation == 'update':
         client.update_resource(args.json)
     elif args.operation == 'delete':
