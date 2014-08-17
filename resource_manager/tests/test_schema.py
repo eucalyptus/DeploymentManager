@@ -26,6 +26,7 @@ def test_machine_unique():
     schema = ResourceSchema().machine_schema
     assert schema['hostname']['unique']
 
+
 def test_machine_states():
     schema = ResourceSchema().machine_schema
     assert schema["state"]['allowed'] == ["pxe", "pxe_failed", "idle", "in_use", "needs_repair"]
