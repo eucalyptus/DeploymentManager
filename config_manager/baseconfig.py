@@ -24,8 +24,13 @@ import config_manager
 
 class ConfigProperty(object):
     DEFAULT_NOT_DEFINED = "DEFAULT NOT DEFINED"
-    def __init__(self, json_name, configmanager, value=None,
-                 validate_callback=None, reset_callback=None,
+    def __init__(self,
+                 json_name,
+                 configmanager,
+                 value=None,
+                 type=None,
+                 validate_callback=None,
+                 reset_callback=None,
                  default_value=DEFAULT_NOT_DEFINED):
         assert isinstance(configmanager, BaseConfig)
         self.configmanager = configmanager
@@ -69,10 +74,13 @@ class ConfigProperty(object):
         value = self.validate(self.value)
 
     def __repr__(self):
+        if isinstance(self.value, BaseConfig):
+            val_str = str(self.value.__class__.__name__) + "()"
+        else:
+            val_str = str(self.value)
         return '{0}: key:"{1}" --> "{2}"'.format(self.__class__.__name__,
                                                     self.name,
-                                                    self.value)
-
+                                                    val_str)
 
 
 class BaseConfig(object):
@@ -165,16 +173,7 @@ class BaseConfig(object):
         Default string representation of this object will be the formatted
         json configuration
         """
-        buf = "Local Attributes:\n"
-        config_properties = "Config Properties:\n"
-        for key in self.__dict__:
-            if isinstance(self.__dict__[key], ConfigProperty):
-                config_properties += "\t{0}\n".format(self.__dict__[key])
-            else:
-                buf += "\t{0}  ---> {1}\n".format(key, self.__dict__[key])
-        buf += config_properties
-        buf += "Current JSON Config:\n{0}".format(self.to_json())
-        return buf
+        return self.to_json(show_all=True)
 
     def del_prop(self, property_name):
         prop = getattr(self, property_name, None)
@@ -201,7 +200,7 @@ class BaseConfig(object):
         """
         pass
 
-    def _sanitize_json(self, json_dict):
+    def _process_json_output(self, json_dict, show_all=False, **kwargs):
         """
         By default do not write json values which have null or empty content.
         This is to avoid deleting attributes unintentionally in the end
@@ -213,15 +212,22 @@ class BaseConfig(object):
         assert isinstance(json_dict, dict)
         for key in json_dict:
             if not json_dict[key]:
-                new_dict.__delitem__(key)
+                if not show_all:
+                    new_dict.__delitem__(key)
+                else:
+                    new_dict['!' + str(key)] = new_dict[key]
+                    new_dict.__delitem__(key)
         return new_dict
 
-    def to_json(self):
+    def to_json(self, show_all=False, **kwargs):
         """
         converts the local dict '_json_properties{} to json
         """
         return json.dumps(self,
-                          default=lambda o: o._sanitize_json(o._json_properties),
+                          default=lambda o: o._process_json_output(
+                              json_dict=o._json_properties,
+                              show_all=show_all,
+                              **kwargs),
                           sort_keys=True,
                           indent=4)
 
@@ -283,15 +289,16 @@ class BaseConfig(object):
         """
         pass
 
-    def diff(self, file_path=None):
+    def diff(self, file_path):
         """
         Method to show current values vs those (saved) in a file.
         Will return a formatted string to show the difference
         """
+        if not file_path:
+            raise ValueError('File path must be provided for diff()')
         #Create formatted string representation of dict values
         text1 = self.to_json().splitlines()
         #Create formatted string representation of values in file
-        file_path = file_path or self.read_file_path
         file_dict = self._get_dict_from_file(file_path=file_path) or {}
         text2 = json.dumps(file_dict, sort_keys=True, indent=4).splitlines()
         diff = difflib.unified_diff(text2, text1, lineterm='')
