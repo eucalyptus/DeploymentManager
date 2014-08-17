@@ -1,3 +1,5 @@
+![Travis Results](https://travis-ci.org/eucalyptus/DeploymentManager.svg?branch=master)
+
 DeploymentManager
 ================
 Deployment Management Tools for Eucalyptus Deployment
