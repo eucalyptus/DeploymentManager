@@ -5,7 +5,7 @@ import urllib
 
 try:
     from resource_manager.client import ResourceManagerClient
-except ImportError, e:
+except ImportError as error:
     sys.path.append("..")
     from client import ResourceManagerClient
 
@@ -24,7 +24,7 @@ def test_defaults(resource='machines'):
     for attribute, value in defaults.iteritems():
         try:
             assert value == client.__getattribute__(attribute)
-        except AssertionError, e:
+        except AssertionError as error:
             raise AssertionError("Default for {0} should be:{1}\n"
                                  "Received: {2}".format(attribute, client.__getattribute__(attribute), value))
 
