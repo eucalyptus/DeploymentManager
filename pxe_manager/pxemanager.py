@@ -160,5 +160,3 @@ class PxeManager(object):
         for item in self.reservation:
             reservation_ips.append(self.cobbler.get_system(item)['interfaces']['eth0']['ip_address'])
         return reservation_ips
-
-

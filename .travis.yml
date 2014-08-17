@@ -5,4 +5,6 @@ python:
 install:
   - python setup.py install
   - python setup.py test
-script: nosetests
+script:
+  - pep8 --max-line-length=120 .
+  - nosetests

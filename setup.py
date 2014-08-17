@@ -19,7 +19,6 @@ try:
 except ImportError:
     from distutils.core import setup
 
-
 setup(name='deploymentmanager',
       version='0.1',
       description='Eucalyptus Deployment and Configuration Management tools',
@@ -30,9 +29,6 @@ setup(name='deploymentmanager',
                         'Flask-Bootstrap', 'eve', 'PrettyTable', 'argparse', 'nose', 'httpretty'],
       test_suite="nose.collector",
       zip_safe=False,
-      classifiers=[
-          "Development Status :: 1 - Alpha",
-          "Topic :: Utilities",
-          "Environment :: Console",
-      ],
-)
+      classifiers=["Development Status :: 1 - Alpha",
+                   "Topic :: Utilities",
+                   "Environment :: Console"])

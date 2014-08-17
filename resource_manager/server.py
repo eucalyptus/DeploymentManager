@@ -4,6 +4,7 @@ from eve.auth import BasicAuth
 from flask_bootstrap import Bootstrap
 from eve_docs import eve_docs
 
+
 class ResourceManagerBasicAuth(BasicAuth):
     def check_auth(self, username, password, allowed_roles, resource, method):
         if method == 'GET':

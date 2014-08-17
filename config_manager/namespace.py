@@ -21,6 +21,7 @@ class Namespace(object):
     Convert dict (if provided) into attributes and return a somewhat
     generic object
     """
+
     def __init__(self, newdict=None):
         if newdict:
             for key in newdict:
@@ -32,8 +33,8 @@ class Namespace(object):
                         setattr(self, key, value)
                 except:
                     print '"{0}" ---> "{1}" , type: "{2}"'.format(key,
-                                                                 value,
-                                                                 type(value))
+                                                                  value,
+                                                                  type(value))
                     raise
 
     def _to_json(self):

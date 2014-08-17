@@ -22,8 +22,10 @@ from shutil import copyfile
 import difflib
 import config_manager
 
+
 class ConfigProperty(object):
     DEFAULT_NOT_DEFINED = "DEFAULT NOT DEFINED"
+
     def __init__(self,
                  json_name,
                  configmanager,
@@ -42,7 +44,7 @@ class ConfigProperty(object):
         #self.set(value)
         self.value = value
         self.default_value = default_value
-        self.__doc__ = "Mapping to allow json property: {0} manipulation"\
+        self.__doc__ = "Mapping to allow json property: {0} manipulation" \
             .format(json_name)
 
     @property
@@ -62,7 +64,7 @@ class ConfigProperty(object):
 
     def reset_to_default(self):
         if self.default_value == self.DEFAULT_NOT_DEFINED:
-           return
+            return
         else:
             self.value = self.default_value
 
@@ -79,8 +81,8 @@ class ConfigProperty(object):
         else:
             val_str = str(self.value)
         return '{0}: key:"{1}" --> "{2}"'.format(self.__class__.__name__,
-                                                    self.name,
-                                                    val_str)
+                                                 self.name,
+                                                 val_str)
 
 
 class BaseConfig(object):
@@ -88,6 +90,7 @@ class BaseConfig(object):
     Intention of this class is to provide utilities around reading and writing
     CLI environment related configuration.
     """
+
     def __init__(self,
                  name=None,
                  description=None,
@@ -130,24 +133,23 @@ class BaseConfig(object):
         self.update_from_file()
         self.default_attributes = {}
 
-
     def __setattr__(self, key, value, force=False):
         attr = getattr(self, key, None)
         if attr and isinstance(attr, ConfigProperty) and not force:
-                raise AttributeError('ConfigProperty types are ready-only, '
-                                     'did you mean to set {0}.value?'
-                                     .format(key))
+            raise AttributeError('ConfigProperty types are ready-only, '
+                                 'did you mean to set {0}.value?'
+                                 .format(key))
         else:
             self.__dict__[key] = value
 
     def create_property(self, json_name, value=None, validate_callback=None,
-                     reset_callback=None, default_value=None):
+                        reset_callback=None, default_value=None):
         return ConfigProperty(json_name=json_name,
-                           configmanager=self,
-                           value=value,
-                           validate_callback=validate_callback,
-                           reset_callback=reset_callback,
-                           default_value=default_value)
+                              configmanager=self,
+                              value=value,
+                              validate_callback=validate_callback,
+                              reset_callback=reset_callback,
+                              default_value=default_value)
 
     def _get_json_property(self, property_name):
         """
@@ -343,8 +345,6 @@ class BaseConfig(object):
             save_file.write(config_json)
             save_file.flush()
 
-
-
     def add_config(self, service_config):
         self.default_attributes.update(
             {service_config.__class__.__name__.lower(): service_config}
@@ -362,4 +362,3 @@ class DMJSONEncoder(json.JSONEncoder):
             return obj.to_dict()
         else:
             return json.JSONEncoder.default(self, obj)
-

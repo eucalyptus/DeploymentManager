@@ -44,8 +44,10 @@ system_properties.add_property('bootstrap.webservices.use_dns_delegation', True)
 
 enterprise = Enterprise(clientcert="much/cert", clientkey="such/key")
 
-packages = Packages(eucalyptus_repo='http://release-repo.eucalyptus-systems.com/releases/eucalyptus/4.0/centos/6/x86_64/',
-                    euca2ools_repo='http://release-repo.eucalyptus-systems.com/releases/euca2ools/3.1/centos/6/x86_64/')
+packages = Packages(eucalyptus_repo='http://release-repo.eucalyptus-systems.com/'
+                                    'releases/eucalyptus/4.0/centos/6/x86_64/',
+                    euca2ools_repo='http://release-repo.eucalyptus-systems.com/'
+                                   'releases/euca2ools/3.1/centos/6/x86_64/')
 
 # build Eucalyptus
 eucalyptus = Eucalyptus()
@@ -66,6 +68,3 @@ config.add_config(eucalyptus)
 #                  indent=2, sort_keys=True)
 
 print json.dumps(config.to_dict(), cls=DMJSONEncoder, indent=2, sort_keys=True)
-
-
-

@@ -3,6 +3,7 @@ from eve.utils import home_link
 from .labels import LABELS
 import re
 
+
 def get_cfg():
     cfg = {}
     base = home_link()['href']

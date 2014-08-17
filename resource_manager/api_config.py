@@ -3,6 +3,7 @@ ITEM_METHODS = ['GET', 'PATCH', 'PUT', 'DELETE']
 PAGINATION = False
 lookup_url = 'regex("[\w-]+")'
 
+
 class ResourceSchema(object):
     machine_schema = {
         'hostname': {
@@ -61,6 +62,7 @@ class ResourceSchema(object):
         },
         'schema': address_schema
     }
+
 
 schema = ResourceSchema()
 DOMAIN = {
