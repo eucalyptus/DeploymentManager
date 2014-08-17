@@ -29,6 +29,7 @@ setup(name='deploymentmanager',
       install_requires=['paramiko', 'PrettyTable', 'eve', 'requests',
                         'Flask-Bootstrap', 'eve', 'PrettyTable', 'argparse'],
       tests_require=['nose', 'httpretty'],
+      test_suite="nose.collector",
       zip_safe=False,
       classifiers=[
           "Development Status :: 1 - Alpha",
