@@ -28,7 +28,7 @@ def test_machine_unique():
 
 def test_machine_states():
     schema = ResourceSchema().machine_schema
-    assert schema["states"]['allowed'] == ["pxe", "pxe_failed", "idle", "in_use", "needs_repair"]
+    assert schema["state"]['allowed'] == ["pxe", "pxe_failed", "idle", "in_use", "needs_repair"]
 
 
 def test_address_keys():
