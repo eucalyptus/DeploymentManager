@@ -1,13 +1,8 @@
 import json
-import sys
 import httpretty
 import urllib
 
-try:
-    from resource_manager.client import ResourceManagerClient
-except ImportError as error:
-    sys.path.append("..")
-    from client import ResourceManagerClient
+from resource_manager.client import ResourceManagerClient
 
 def test_init():
     client = ResourceManagerClient()
