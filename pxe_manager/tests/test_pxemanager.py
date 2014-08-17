@@ -2,6 +2,7 @@ from pxe_manager.pxemanager import PxeManager
 from resource_manager.client import ResourceManagerClient
 import httpretty
 
+
 @httpretty.activate
 def test_defaults():
     client = ResourceManagerClient()
