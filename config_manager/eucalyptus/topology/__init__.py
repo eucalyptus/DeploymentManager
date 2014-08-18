@@ -77,7 +77,6 @@ class Topology(BaseConfig):
         else:
             print 'clustername:"{0}" not in cluster list'.format(clustername)
 
-
     def add_cloud_controllers(self, clcs):
         if clcs is None:
             raise ValueError('add_cloud_controllers provided empty '

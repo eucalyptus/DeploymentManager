@@ -344,21 +344,3 @@ class BaseConfig(object):
         with save_file:
             save_file.write(config_json)
             save_file.flush()
-
-    def add_config(self, service_config):
-        self.default_attributes.update(
-            {service_config.__class__.__name__.lower(): service_config}
-        )
-
-    def to_dict(self):
-        return dict(name=self.name,
-                    description=self.description,
-                    default_attributes=self.default_attributes)
-
-
-class DMJSONEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if hasattr(obj, 'to_dict'):
-            return obj.to_dict()
-        else:
-            return json.JSONEncoder.default(self, obj)

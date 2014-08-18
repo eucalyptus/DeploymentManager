@@ -29,11 +29,11 @@ class BlockStorage(BaseConfig):
                  storage_controllers=None,
                  storage_backend=None):
         super(BlockStorage, self).__init__(name=name,
-                                         description=None,
-                                         read_file_path=None,
-                                         write_file_path=None,
-                                         property_type=property_type,
-                                         version=None)
+                                           description=None,
+                                           read_file_path=None,
+                                           write_file_path=None,
+                                           property_type=property_type,
+                                           version=None)
         self.backend_type = self.create_property(json_name='backend_type',
                                                  value=backend_type)
         self.storage_backends = self.create_property(
@@ -45,7 +45,3 @@ class BlockStorage(BaseConfig):
         self.euca_properties = self.create_property(
             json_name='euca_properties',
             value=euca_properties)
-
-
-
-
