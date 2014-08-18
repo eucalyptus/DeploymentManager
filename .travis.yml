@@ -5,6 +5,8 @@ python:
 install:
   - python setup.py install
   - python setup.py test
+notifications:
+  irc: "chat.freenode.net#eucalyptus-qa"
 script:
   - pep8 --max-line-length=120 .
   - nosetests
