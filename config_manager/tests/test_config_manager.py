@@ -13,7 +13,7 @@ def test_setters():
     eucalyptus = Eucalyptus()
     log_level = "TEST-LEVEL"
     eucalyptus.set_log_level(log_level)
-    assert eucalyptus.log_level == log_level
+    assert eucalyptus.log_level.value == log_level
 
 
 def test_add_topology():

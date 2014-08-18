@@ -19,11 +19,7 @@ from config_manager.baseconfig import BaseConfig
 class Cluster(BaseConfig):
     def __init__(self,
                  name=None,
-                 description=None,
-                 read_file_path=None,
-                 write_file_path=None,
                  property_type=None,
-                 version=None,
                  cc_hostname=None,
                  sc_hostname=None):
         super(Cluster, self).__init__(name=name,
@@ -32,18 +28,8 @@ class Cluster(BaseConfig):
                                       write_file_path=None,
                                       property_type=property_type,
                                       version=None)
-        self.cc_hostname = self.create_property(json_name='cc_hostname',
-                                                value=cc_hostname)
-        self.sc_hostname = self.create_property(json_name='sc_hostname',
-                                                value=sc_hostname)
-
-    def to_dict(self):
-        return {
-            self.name: {
-                'cc-1': self.cc_hostname,
-                'sc-1': self.sc_hostname
-            }
-        }
+        self.cc_hostname = self.create_property('cc_hostname', value=cc_hostname)
+        self.sc_hostname = self.create_property('sc_hostname', value=sc_hostname)
 
 
 class NodeControllers(BaseConfig):
