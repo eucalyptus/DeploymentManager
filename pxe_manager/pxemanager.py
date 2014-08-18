@@ -39,10 +39,22 @@ from paramiko import BadHostKeyException, AuthenticationException, SSHException,
 
 
 class PxeManager(object):
-    def __init__(self, cobbler_url, cobbler_user, cobbler_password, resource_manager_client):
+    def __init__(self, cobbler_url, cobbler_user, cobbler_password, resource_manager_client, resource_username="root",
+                 resource_password="foobar"):
+        """
+
+        :param cobbler_url: (string) URL of cobbler server
+        :param cobbler_user: (string) cobbler user
+        :param cobbler_password: (string) cobbler user's password
+        :param resource_manager_client: (object) ResourceManger object
+        :param resource_username: (string) user to attempt ssh login to reserved host
+        :param resource_password: (string) password for user of reserved host
+        """
         self.cobbler = xmlrpclib.Server(cobbler_url)
         self.token = self.cobbler.login(cobbler_user, cobbler_password)
         self.resource_manager = resource_manager_client
+        self.target_user = resource_username
+        self.target_password = resource_password
         self.distro = {'esxi51': 'qa-vmwareesxi51u0-x86_64',
                        'esxi50': 'qa-vmwareesxi50u1-x86_64',
                        'centos': 'qa-centos6-x86_64-striped-drives',
@@ -104,6 +116,14 @@ class PxeManager(object):
         return
 
     def is_system_ready(self, system_name):
+        """
+        Check that a given system can be reached via ssh after it is kickstarted. If it cannot be reached we will
+        try another host. Mark the failed attempt in the DB as a "pxe_failed" for later cleanup. On success update the
+        DB with the state of the machine.
+
+        :param system_name: name of the system to check
+        :return:
+        """
         sys_ip = self.cobbler.get_system(system_name)['interfaces']['eth0']['ip_address']
         if self.check_ssh(ip=sys_ip):
             data = json.dumps({'hostname': system_name, 'state': 'in_use'})
@@ -130,9 +150,10 @@ class PxeManager(object):
             self.resource_manager.update_resource(data)
         return
 
-    def check_ssh(self, ip, user="root", password="foobar", interval=20, retries=45):
+    def check_ssh(self, ip, interval=20, retries=45):
         """
         Attempt to ssh to a given host. Default is to try for 15 minutes
+
         :param ip: ip of host to try
         :param user: user to log in as
         :param password: user login password
@@ -146,7 +167,7 @@ class PxeManager(object):
         for i in range(retries):
             try:
                 print "Attempting ssh to " + ip + "....." + str(i+1) + "/" + str(retries)
-                ssh.connect(ip, username=user, password=password)
+                ssh.connect(ip, username=self.target_user, password=self.target_password)
                 print "Obtained ssh connection to " + ip + "!"
                 return True
             except (BadHostKeyException, AuthenticationException, SSHException, socket.error) as e:
@@ -155,6 +176,12 @@ class PxeManager(object):
         return False
 
     def get_reservation_as_ip(self, reservation):
+        """
+        Will lookup IP of a given hostname in cobbler server.
+
+        :param reservation: An array of hostnames to get IPs of
+        :return: An array of IPs
+        """
         reservation_ips = []
         for item in reservation:
             reservation_ips.append(self.cobbler.get_system(item)['interfaces']['eth0']['ip_address'])
