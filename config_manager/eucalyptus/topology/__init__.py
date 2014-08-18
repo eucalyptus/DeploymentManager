@@ -28,12 +28,16 @@ class Topology(BaseConfig):
                                        read_file_path=None,
                                        version=None)
 
-        self.cloud_controllers_property = \
-            self.create_property('cloud_controller')
-        self.walrus_property = self.create_property('walrus')
-        self.user_facing_services_property = \
-            self.create_property('user_facing')
+        self.cloud_controllers = self.create_property('cloud_controller')
+        self.walrus = self.create_property('walrus')
+        self.user_facing_services = self.create_property('user_facing')
         self.clusters_property = self.create_property('clusters', value=[])
+
+    def add_clusters2(self, clusters):
+        clusterdict = {}
+        for cc in clusters:
+            clusterdict.update({cc.name.value: cc})
+        self.clusters_property.value = clusterdict
 
     def add_clusters(self, clusters):
         if not clusters:
@@ -41,6 +45,7 @@ class Topology(BaseConfig):
                              .format(clusters))
         if not isinstance(clusters, list):
             clusters = [clusters]
+
         for cluster in clusters:
             assert isinstance(cluster, Cluster), 'add clusters passed non ' \
                                                  'cluster type, cluster:"{0}"' \
