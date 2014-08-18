@@ -31,9 +31,14 @@ class Topology(BaseConfig):
         self.cloud_controllers = self.create_property('cloud_controller')
         self.walrus = self.create_property('walrus')
         self.user_facing_services = self.create_property('user_facing')
-        self.clusters_property = self.create_property('clusters', value=[])
+        self.clusters_property = self.create_property('clusters', value={})
 
     def add_clusters2(self, clusters):
+        if not clusters:
+            raise ValueError('add_clusters provided empty value: "{0}"'
+                             .format(clusters))
+        if not isinstance(clusters, list):
+            clusters = [clusters]
         clusterdict = {}
         for cc in clusters:
             clusterdict.update({cc.name.value: cc})
@@ -53,7 +58,7 @@ class Topology(BaseConfig):
             if self.get_cluster(cluster.name.value):
                 raise ValueError('Cluster with name:"{0}" already exists'
                                  .format(cluster.name.value))
-            self.clusters_property.value.append(cluster)
+            self.clusters_property.value[cluster.name.value] = cluster
 
     def create_cluster(self, name, cc_hostname=None, sc_hostname=None):
         cluster = Cluster(name,
@@ -62,18 +67,16 @@ class Topology(BaseConfig):
         self.add_clusters(cluster)
 
     def get_cluster(self, clustername):
-        clusters = self.clusters_property.value
-        for cluster in clusters:
-            if cluster.name.value == clustername:
-                return cluster
+        if clustername in self.clusters_property.value:
+            return self.clusters_property.value[clustername]
         return None
 
     def delete_cluster(self, clustername):
-        cluster = self.get_cluster(clustername)
-        if cluster:
-            clusters = self.clusters_property.value
-            clusters.remove(cluster)
-            self.clusters_property.update()
+        if clustername in self.clusters_property.value:
+            self.clusters_property.value.pop(clustername)
+        else:
+            print 'clustername:"{0}" not in cluster list'.format(clustername)
+
 
     def add_cloud_controllers(self, clcs):
         if clcs is None:
