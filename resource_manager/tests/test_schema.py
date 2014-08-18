@@ -14,6 +14,7 @@ def test_machine_keys():
     assert 'hostname' in schema
     assert 'owner' in schema
     assert 'state' in schema
+    assert 'job_id' in schema
 
 
 def test_machine_required():
@@ -46,3 +47,18 @@ def test_address_required():
 def test_address_unique():
     schema = ResourceSchema().address_schema
     assert schema['address']['unique']
+
+
+def domain_check(domain, item_title):
+    assert 'additional_lookup' in domain
+    assert 'url' in domain['additional_lookup']
+    assert domain['additional_lookup']['url'] == lookup_url
+    assert 'item_title' in domain
+    assert domain['item_title'] == item_title
+
+
+def test_domains():
+    schema = ResourceSchema()
+    domain_check(schema.machines, "machine")
+    domain_check(schema.private_addresses, "private-address")
+    domain_check(schema.public_addresses, "public-address")
