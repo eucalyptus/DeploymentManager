@@ -139,6 +139,7 @@ class EucalyptusProperty(object):
                                             self.name,
                                             val_str)
 
+
 class BaseConfig(object):
     """
     Intention of this class is to provide utilities around reading and writing

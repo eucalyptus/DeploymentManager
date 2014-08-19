@@ -20,7 +20,7 @@ class BlockStorage(BaseConfig):
     def __init__(self,
                  name=None,
                  description=None,
-                 read_file_path=None, 
+                 read_file_path=None,
                  write_file_path=None,
                  property_type=None,
                  version=None,

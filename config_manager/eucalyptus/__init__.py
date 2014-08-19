@@ -42,20 +42,13 @@ class Eucalyptus(BaseConfig):
             name='bootstrap.webservices.use_dns_delegation', value=True)
         self.eucalyptus_props = self.create_property('eucaprops', value=self.eucalyptus_prop_getter)
 
-
     @property
     def eucalyptus_prop_getter(self):
         return self.get_eucalyptus_props_from_everywhere()
 
     def get_eucalyptus_props_from_everywhere(self):
         property_dict = {}
-
-        for attr in dir(self):
-            if isinstance(self.__getattribute__(attr), BaseConfig):
-                print "hello"
-                for property in attr._eucalyptus_properties:
-                    if isinstance(property, EucalyptusProperty):
-                        print attr
+        return property_dict
 
         # if self._eucalyptus_properties:
         #     for eucalyptus_property in self._eucalyptus_properties:
@@ -65,7 +58,6 @@ class Eucalyptus(BaseConfig):
         # myd['test'] = 'blah'
         # myd['test2'] = 'blhaslskdfj'
         # return myd
-
 
     def add_topology(self, topology):
         self.topology.value = topology
