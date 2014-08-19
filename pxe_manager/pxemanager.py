@@ -39,27 +39,28 @@ from paramiko import BadHostKeyException, AuthenticationException, SSHException,
 
 
 class PxeManager(object):
-    def __init__(self, cobbler_url, cobbler_user, cobbler_password, resource_manager_client, resource_username="root",
-                 resource_password="foobar"):
+    def __init__(self, cobbler_url, cobbler_user, cobbler_password, resource_manager_client, ssh_user="root",
+                 ssh_password="foobar"):
         """
 
         :param cobbler_url: (string) URL of cobbler server
         :param cobbler_user: (string) cobbler user
         :param cobbler_password: (string) cobbler user's password
         :param resource_manager_client: (object) ResourceManger object
-        :param resource_username: (string) user to attempt ssh login to reserved host
-        :param resource_password: (string) password for user of reserved host
+        :param ssh_user: (string) user to attempt ssh login to reserved host
+        :param ssh_password: (string) password for user of reserved host
         """
         self.cobbler = xmlrpclib.Server(cobbler_url)
         self.token = self.cobbler.login(cobbler_user, cobbler_password)
         self.resource_manager = resource_manager_client
-        self.target_user = resource_username
-        self.target_password = resource_password
+        self.ssh_user = ssh_user
+        self.ssh_password = ssh_password
         self.distro = {'esxi51': 'qa-vmwareesxi51u0-x86_64',
                        'esxi50': 'qa-vmwareesxi50u1-x86_64',
                        'centos': 'qa-centos6-x86_64-striped-drives',
                        'rhel': 'qa-rhel6u5-x86_64-striped-drives'}
         self.reservation = []
+        self.file_name = 'kickstart.check'
 
     def get_resource(self, owner, count, job_id, distro):
         """
@@ -79,6 +80,8 @@ class PxeManager(object):
             hostname = resources[i]['hostname']
             data = json.dumps({'hostname': hostname, 'owner': owner, 'state': 'pxe', 'job_id': job_id})
             self.resource_manager.update_resource(data)
+            self.put_file_on_target(ip=self.cobbler.get_system(hostname)['interfaces']['eth0']['ip_address'],
+                                    file_name=self.file_name)
             print "kickstarting host: " + hostname
             self.reservation.append(hostname)
             self.kickstart_machine(system_name=hostname, distro=distro)
@@ -119,13 +122,17 @@ class PxeManager(object):
         """
         Check that a given system can be reached via ssh after it is kickstarted. If it cannot be reached we will
         try another host. Mark the failed attempt in the DB as a "pxe_failed" for later cleanup. On success update the
-        DB with the state of the machine.
+        DB with the state of the machine. Another check is that we check for the presence of a file that was placed on
+        the host prior to kickstart. If this file is present it indicated that kickstart did not happen.
 
         :param system_name: name of the system to check
         :return:
         """
         sys_ip = self.cobbler.get_system(system_name)['interfaces']['eth0']['ip_address']
         if self.check_ssh(ip=sys_ip):
+            if self.check_for_file_on_target(ip=sys_ip, file_name=self.file_name):
+                return False
+            print "File presence not detected. Kickstart succeeded"
             data = json.dumps({'hostname': system_name, 'state': 'in_use'})
             self.resource_manager.update_resource(data)
             return True
@@ -150,6 +157,27 @@ class PxeManager(object):
             self.resource_manager.update_resource(data)
         return
 
+    def put_file_on_target(self, ip, file_name):
+        ssh = SSHClient()
+        ssh.set_missing_host_key_policy(AutoAddPolicy()) # wont require saying 'yes' to new fingerprint
+        ssh.connect(ip, username=self.ssh_user, password=self.ssh_password)
+        ssh.exec_command('touch ' + file_name)
+        ssh.close()
+        return
+
+    def check_for_file_on_target(self, ip, file_name):
+        ssh = SSHClient()
+        ssh.set_missing_host_key_policy(AutoAddPolicy()) # wont require saying 'yes' to new fingerprint
+        ssh.connect(ip, username=self.ssh_user, password=self.ssh_password)
+        command = "[ -f /root/" + file_name + " ] && echo OK"
+        _, stdout, _ = ssh.exec_command(command)
+        if stdout.read():
+            ssh.close()
+            print "Found a file that should not have been on the host"
+            return True
+        ssh.close()
+        return False
+
     def check_ssh(self, ip, interval=20, retries=45):
         """
         Attempt to ssh to a given host. Default is to try for 15 minutes
@@ -167,7 +195,7 @@ class PxeManager(object):
         for i in range(retries):
             try:
                 print "Attempting ssh to " + ip + "....." + str(i+1) + "/" + str(retries)
-                ssh.connect(ip, username=self.target_user, password=self.target_password)
+                ssh.connect(ip, username=self.ssh_user, password=self.ssh_password)
                 print "Obtained ssh connection to " + ip + "!"
                 return True
             except (BadHostKeyException, AuthenticationException, SSHException, socket.error) as e:
