@@ -159,7 +159,7 @@ class PxeManager(object):
 
     def put_file_on_target(self, ip, file_name):
         ssh = SSHClient()
-        ssh.set_missing_host_key_policy(AutoAddPolicy()) # wont require saying 'yes' to new fingerprint
+        ssh.set_missing_host_key_policy(AutoAddPolicy())  # wont require saying 'yes' to new fingerprint
         ssh.connect(ip, username=self.ssh_user, password=self.ssh_password)
         ssh.exec_command('touch ' + file_name)
         ssh.close()
@@ -167,7 +167,7 @@ class PxeManager(object):
 
     def check_for_file_on_target(self, ip, file_name):
         ssh = SSHClient()
-        ssh.set_missing_host_key_policy(AutoAddPolicy()) # wont require saying 'yes' to new fingerprint
+        ssh.set_missing_host_key_policy(AutoAddPolicy())  # wont require saying 'yes' to new fingerprint
         ssh.connect(ip, username=self.ssh_user, password=self.ssh_password)
         command = "[ -f /root/" + file_name + " ] && echo OK"
         _, stdout, _ = ssh.exec_command(command)
