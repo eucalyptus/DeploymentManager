@@ -158,6 +158,14 @@ class PxeManager(object):
         return
 
     def put_file_on_target(self, ip, file_name):
+        """
+        SSH to a host and touch a file there. We can later check for this files existence to determine whether a
+        kickstart completed successfully.
+
+        :param ip: (string) IP address of host
+        :param file_name: name of file to create
+        :return:
+        """
         ssh = SSHClient()
         ssh.set_missing_host_key_policy(AutoAddPolicy())  # wont require saying 'yes' to new fingerprint
         ssh.connect(ip, username=self.ssh_user, password=self.ssh_password)
@@ -166,6 +174,13 @@ class PxeManager(object):
         return
 
     def check_for_file_on_target(self, ip, file_name):
+        """
+        SSH to a host and check for the presence of a file.
+
+        :param ip: (string) IP of a host
+        :param file_name: Name of file to check if it exists
+        :return: True if the file was found
+        """
         ssh = SSHClient()
         ssh.set_missing_host_key_policy(AutoAddPolicy())  # wont require saying 'yes' to new fingerprint
         ssh.connect(ip, username=self.ssh_user, password=self.ssh_password)
