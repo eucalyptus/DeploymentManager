@@ -15,6 +15,7 @@
 # limitations under the License.
 
 from config_manager.baseconfig import BaseConfig, EucalyptusProperty
+import copy
 
 
 class Eucalyptus(BaseConfig):
@@ -41,8 +42,22 @@ class Eucalyptus(BaseConfig):
             name='bootstrap.webservices.use_dns_delegation', value=True)
 
     def _process_json_output(self, json_dict, show_all=False, **kwargs):
-        json_dict['eucalyptus_properties'] = self._aggregate_eucalyptus_properties()
-        return super(Eucalyptus, self)._process_json_output(json_dict=json_dict,
+        tempdict = copy.copy(json_dict)
+        eucaprops = {}
+        aggdict = self._aggregate_eucalyptus_properties()
+        for key in aggdict:
+            value = aggdict[key]
+            # todo handle value of 'False' as valid
+            if not value and show_all:
+                eucaprops["!" + str(key)] = aggdict[key]
+            elif value:
+                eucaprops[key] = aggdict[key]
+        if eucaprops:
+            if not 'eucalyptus_properties' in tempdict:
+                tempdict['eucalyptus_properties'] = aggdict
+            else:
+                tempdict['eucalyptus_properties'].update(aggdict)
+        return super(Eucalyptus, self)._process_json_output(json_dict=tempdict,
                                                             show_all=show_all,
                                                             **kwargs)
 
