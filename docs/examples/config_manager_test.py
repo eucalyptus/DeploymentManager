@@ -4,14 +4,6 @@ from config_manager.eucalyptus import Eucalyptus
 from config_manager.eucalyptus.topology import Topology
 from config_manager.eucalyptus.topology.cluster import Cluster
 
-topology = Topology(name='topo')
-
-cluster1 = Cluster('one')
-cluster2 = Cluster('two')
-
-topology.add_clusters([cluster1, cluster2])
-
-# print topology
 
 eucalyptus = Eucalyptus()
 eucalyptus.log_level.value = 'DEBUG'
@@ -27,10 +19,6 @@ eucalyptus.system_properties.value = {
 
 }
 
-
-eucalyptus.topology.value = topology
-
-print topology
 
 # print eucalyptus
 #

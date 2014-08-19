@@ -85,6 +85,60 @@ class ConfigProperty(object):
                                                  val_str)
 
 
+class EucalyptusProperty(object):
+    DEFAULT_NOT_DEFINED = "DEFAULT NOT DEFINED"
+
+    def __init__(self,
+                 name,
+                 configmanager,
+                 value=None,
+                 objtype=None,
+                 validate_callback=None,
+                 reset_callback=None,
+                 default_value=DEFAULT_NOT_DEFINED):
+        assert isinstance(configmanager, BaseConfig)
+        self._value = None
+        self.configmanager = configmanager
+        self.name = name
+        if validate_callback:
+            self.validate = validate_callback
+        if reset_callback:
+            self.reset = reset_callback
+        # self.set(value)
+        self.value = value
+        self.default_value = default_value
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, newvalue):
+        newvalue = self.validate(newvalue)
+        self._value = newvalue
+
+    def delete(self):
+        self.configmanager.delete_eucalyptus_property(self)
+
+    def validate(self, value):
+        return value
+
+    def reset_to_default(self):
+        if self.default_value == self.DEFAULT_NOT_DEFINED:
+            return
+        else:
+            self.value = self.default_value
+
+    def update(self):
+        value = self.validate(self.value)
+
+    def __repr__(self):
+        # val_str = str(self.value.__class__.__name__) + "()"
+        val_str = str(self.value)
+        return '{0}:(:"{1}", "{2}")'.format(self.__class__.__name__,
+                                            self.name,
+                                            val_str)
+
 class BaseConfig(object):
     """
     Intention of this class is to provide utilities around reading and writing
@@ -117,6 +171,9 @@ class BaseConfig(object):
         # Set name and config file path first to allow updating base values
         # from an existing file
         self._json_properties = {}
+        # used for storing eucalyptus_properties
+        self._eucalyptus_properties = []
+
         # Set name and config file path first to allow updating base values
         # from an existing file
         property_type = property_type or self.__class__.__name__.lower()
@@ -132,6 +189,28 @@ class BaseConfig(object):
         self.write_file_path = write_file_path
         self.update_from_file()
         self.default_attributes = {}
+
+    def _delete_eucalyptus_property(self, name):
+        eucalyptus_property = self._get_eucalyptus_property(name=name)
+        if eucalyptus_property:
+            self._eucalyptus_properties.pop(eucalyptus_property)
+            return True
+
+    def _set_eucalyptus_property(self, name=None, value=None):
+        eucalyptus_property = self._get_eucalyptus_property(name=name)
+        if not eucalyptus_property:
+            self._eucalyptus_properties.append(EucalyptusProperty(name=name,
+                                                                  configmanager=self,
+                                                                  value=value))
+        else:
+            eucalyptus_property.value = value
+
+    def _get_eucalyptus_property(self, name):
+        if name:
+            for eprop in self._eucalyptus_properties:
+                if eprop.name == name:
+                    return eprop
+        return None
 
     def __setattr__(self, key, value, force=False):
         attr = getattr(self, key, None)
@@ -176,15 +255,6 @@ class BaseConfig(object):
         json configuration
         """
         return self.to_json(show_all=True)
-
-    def del_prop(self, property_name):
-        prop = getattr(self, property_name, None)
-        if not hasattr(prop, 'fdel'):
-            raise ValueError('{0} is not a property of this object'
-                             .format(property_name))
-        if prop:
-            prop.fdel(self)
-            self.__delattr__(property_name)
 
     def get_attr_by_json_name(self, json_name):
         for key in self._get_keys():

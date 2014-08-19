@@ -32,6 +32,7 @@ class Topology(BaseConfig):
         self.walrus = self.create_property('walrus')
         self.user_facing_services = self.create_property('user_facing')
         self.clusters_property = self.create_property('clusters', value={})
+        self.my_system_prop = self._set_eucalyptus_property('my_system_prop', value='mysystem')
 
     def add_clusters2(self, clusters):
         if not clusters:
@@ -91,11 +92,6 @@ class Topology(BaseConfig):
     def add_walrus(self, walrus):
         self.walrus = walrus
 
-    def add_user_facing_services(self, ufs):
-        self.user_facing = ufs
+    def add_user_facing_services(self, user_facing_services):
+        self.user_facing_services = user_facing_services
 
-    def to_dict(self):
-        return {'clc-1': self.cloud_controller.hostname,
-                'walrus': self.walrus.hostname,
-                'user-facing': self.user_facing.hostnames,
-                'clusters': self.clusters}
