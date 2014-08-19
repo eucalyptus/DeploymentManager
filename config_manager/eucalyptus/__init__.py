@@ -53,7 +53,7 @@ class Eucalyptus(BaseConfig):
             elif not value and show_all:
                 eucaprops["!" + str(key)] = aggdict[key]
         if eucaprops:
-            if not 'eucalyptus_properties' in tempdict:
+            if 'eucalyptus_properties' not in tempdict:
                 tempdict['eucalyptus_properties'] = eucaprops
             else:
                 tempdict['eucalyptus_properties'].update(eucaprops)
