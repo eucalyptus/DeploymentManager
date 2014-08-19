@@ -47,16 +47,16 @@ class Eucalyptus(BaseConfig):
         aggdict = self._aggregate_eucalyptus_properties()
         for key in aggdict:
             value = aggdict[key]
-            # todo handle value of 'False' as valid
-            if not value and show_all:
-                eucaprops["!" + str(key)] = aggdict[key]
-            elif value:
+            # handle value of 'False' as valid
+            if value or value is False:
                 eucaprops[key] = aggdict[key]
+            elif not value and show_all:
+                eucaprops["!" + str(key)] = aggdict[key]
         if eucaprops:
             if not 'eucalyptus_properties' in tempdict:
-                tempdict['eucalyptus_properties'] = aggdict
+                tempdict['eucalyptus_properties'] = eucaprops
             else:
-                tempdict['eucalyptus_properties'].update(aggdict)
+                tempdict['eucalyptus_properties'].update(eucaprops)
         return super(Eucalyptus, self)._process_json_output(json_dict=tempdict,
                                                             show_all=show_all,
                                                             **kwargs)
