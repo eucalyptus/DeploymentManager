@@ -139,6 +139,7 @@ class EucalyptusProperty(object):
                                             self.name,
                                             val_str)
 
+
 class BaseConfig(object):
     """
     Intention of this class is to provide utilities around reading and writing
@@ -414,3 +415,20 @@ class BaseConfig(object):
         with save_file:
             save_file.write(config_json)
             save_file.flush()
+
+    def _aggregate_eucalyptus_properties(self):
+        """
+        Gathers all the eucalyptus software specific properties for child
+        baseconfig object
+        :returns dict
+        """
+        property_dict = {}
+        for prop in self._eucalyptus_properties:
+            property_dict[prop.name] = prop.value
+
+        for key in self._get_keys():
+            attr = self.__getattribute__(key)
+            if isinstance(attr, ConfigProperty) and \
+                    isinstance(attr.value, BaseConfig):
+                property_dict.update(attr.value._aggregate_eucalyptus_properties())
+        return property_dict

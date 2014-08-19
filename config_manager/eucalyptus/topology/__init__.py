@@ -94,4 +94,3 @@ class Topology(BaseConfig):
 
     def add_user_facing_services(self, user_facing_services):
         self.user_facing_services = user_facing_services
-

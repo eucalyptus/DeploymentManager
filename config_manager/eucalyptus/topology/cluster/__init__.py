@@ -29,6 +29,7 @@ class Cluster(BaseConfig):
                                       write_file_path=None,
                                       property_type=property_type,
                                       version=None)
+        self.storage_controller
         self.cc_hostname = self.create_property('cc_hostname', value=cc_hostname)
         self.sc_hostname = self.create_property('sc_hostname', value=sc_hostname)
 

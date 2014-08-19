@@ -37,35 +37,14 @@ class Eucalyptus(BaseConfig):
         self.install_load_balancer = self.create_property(
             'install-load-balancer', value=True)
         self.install_imaging_worker = self.create_property('install-imaging-worker', value=True)
-
         self.use_dns_delegation = self._set_eucalyptus_property(
             name='bootstrap.webservices.use_dns_delegation', value=True)
-        self.eucalyptus_props = self.create_property('eucaprops', value=self.eucalyptus_prop_getter)
 
-
-    @property
-    def eucalyptus_prop_getter(self):
-        return self.get_eucalyptus_props_from_everywhere()
-
-    def get_eucalyptus_props_from_everywhere(self):
-        property_dict = {}
-
-        for attr in dir(self):
-            if isinstance(self.__getattribute__(attr), BaseConfig):
-                print "hello"
-                for property in attr._eucalyptus_properties:
-                    if isinstance(property, EucalyptusProperty):
-                        print attr
-
-        # if self._eucalyptus_properties:
-        #     for eucalyptus_property in self._eucalyptus_properties:
-        #         property_dict[eucalyptus_property.name] = eucalyptus_property.value
-        # return property_dict
-        # myd = {}
-        # myd['test'] = 'blah'
-        # myd['test2'] = 'blhaslskdfj'
-        # return myd
-
+    def _process_json_output(self, json_dict, show_all=False, **kwargs):
+        json_dict['eucalyptus_properties'] = self._aggregate_eucalyptus_properties()
+        return super(Eucalyptus, self)._process_json_output(json_dict=json_dict,
+                                                            show_all=show_all,
+                                                            **kwargs)
 
     def add_topology(self, topology):
         self.topology.value = topology
