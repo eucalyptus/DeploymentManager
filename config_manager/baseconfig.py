@@ -196,15 +196,19 @@ class BaseConfig(object):
         if eucalyptus_property:
             self._eucalyptus_properties.pop(eucalyptus_property)
             return True
+        if hasattr(self, name):
+            self.__delattr__(name)
 
     def _set_eucalyptus_property(self, name=None, value=None):
         eucalyptus_property = self._get_eucalyptus_property(name=name)
         if not eucalyptus_property:
-            self._eucalyptus_properties.append(EucalyptusProperty(name=name,
-                                                                  configmanager=self,
-                                                                  value=value))
+            eucalyptus_property = EucalyptusProperty(name=name,
+                                                     configmanager=self,
+                                                     value=value)
+            self._eucalyptus_properties.append(eucalyptus_property)
         else:
             eucalyptus_property.value = value
+        return eucalyptus_property
 
     def _get_eucalyptus_property(self, name):
         if name:
@@ -215,10 +219,11 @@ class BaseConfig(object):
 
     def __setattr__(self, key, value, force=False):
         attr = getattr(self, key, None)
-        if attr and isinstance(attr, ConfigProperty) and not force:
+        if attr and (isinstance(attr, ConfigProperty) or isinstance(attr, EucalyptusProperty)) \
+                and not force:
             raise AttributeError('ConfigProperty types are ready-only, '
-                                 'did you mean to set {0}.value?'
-                                 .format(key))
+                                 'did you mean: "{0}.value={1}"?'
+                                 .format(key, value))
         else:
             self.__dict__[key] = value
 
