@@ -16,7 +16,7 @@
 from config_manager.baseconfig import BaseConfig
 
 
-class BlockStorage(BaseConfig):
+class BlockStorageController(BaseConfig):
     def __init__(self,
                  name=None,
                  description=None,
@@ -25,23 +25,13 @@ class BlockStorage(BaseConfig):
                  property_type=None,
                  version=None,
                  backend_type=None,
-                 euca_properties=None,
                  storage_controllers=None,
                  storage_backend=None):
-        super(BlockStorage, self).__init__(name=name,
-                                           description=None,
-                                           read_file_path=None,
-                                           write_file_path=None,
-                                           property_type=property_type,
-                                           version=None)
+        super(BlockStorageController, self).__init__(name=name,
+                                                     description=None,
+                                                     read_file_path=None,
+                                                     write_file_path=None,
+                                                     property_type=property_type,
+                                                     version=None)
         self.backend_type = self.create_property(json_name='backend_type',
                                                  value=backend_type)
-        self.storage_backends = self.create_property(
-            json_name='storage_backend',
-            value=storage_backend)
-        self.storage_controllers = self.create_property(
-            json_name='storage_controllers',
-            value=storage_controllers or [])
-        self.euca_properties = self.create_property(
-            json_name='euca_properties',
-            value=euca_properties)
