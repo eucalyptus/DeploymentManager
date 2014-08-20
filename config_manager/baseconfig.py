@@ -265,8 +265,9 @@ class BaseConfig(object):
     def get_attr_by_json_name(self, json_name):
         for key in self._get_keys():
             attr = getattr(self, key)
-            if hasattr(attr, 'fget') and attr.fget() == json_name:
-                return attr
+            if isinstance(attr, ConfigProperty):
+                if attr.name == json_name:
+                    return attr
         return None
 
     # todo define how validation methods for each config subclass should be used
@@ -355,7 +356,7 @@ class BaseConfig(object):
                         print 'warning local attribute with json_name "{0}" ' \
                               'not found'.format(key)
                     else:
-                        attr.fset(value)
+                        attr.value = value
 
     # todo define how/if this method should be used, examples, etc..
     def send(self, filehandle=None):
