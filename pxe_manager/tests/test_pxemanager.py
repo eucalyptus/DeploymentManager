@@ -5,7 +5,9 @@ import httpretty
 
 @httpretty.activate
 def test_defaults():
-    client = ResourceManagerClient()
+    host_client = ResourceManagerClient()
+    pub_ip_client = ResourceManagerClient(resource_type='public-addresses')
+    priv_ip_client = ResourceManagerClient(resource_type='private-addresses')
     cobbler_url = "http://cobbler.example.com/cobbler_api"
     cobbler_user = "user"
     cobbler_password = "password"
@@ -24,6 +26,6 @@ def test_defaults():
                   'rhel': 'qa-rhel6u5-x86_64-striped-drives'}
     httpretty.register_uri(httpretty.POST, cobbler_url,
                            body=response_body)
-    pxe_manager = PxeManager(cobbler_url, cobbler_user, cobbler_password, client)
+    pxe_manager = PxeManager(cobbler_url, cobbler_user, cobbler_password, host_client, pub_ip_client, priv_ip_client)
     for key, value in distro_map.iteritems():
         assert pxe_manager.distro[key] == value
