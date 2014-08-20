@@ -83,7 +83,7 @@ class Eucalyptus(BaseConfig):
             self.enterprise_repo.value = enterprise_repo
 
     def node_controller_properties(self, nc_properties):
-        ncdict = {} # or have a _nc_properties dict??
+        ncdict = {}  # or have a _nc_properties dict??
         if isinstance(nc_properties, NodeController):
             if nc_properties.max_cores.value:
                 ncdict['max-cores'] = nc_properties.max_cores.value
