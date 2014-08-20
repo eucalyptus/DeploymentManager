@@ -3,6 +3,7 @@ from config_manager.eucalyptus import Eucalyptus
 from config_manager.eucalyptus.enterprise import Enterprise
 from config_manager.eucalyptus.topology import Topology
 from config_manager.eucalyptus.topology.cluster import Cluster
+from config_manager.eucalyptus.topology.cluster.nodes import NodeController
 
 
 eucalyptus = Eucalyptus()
@@ -12,8 +13,16 @@ eucalyptus.add_repositories(eucalyptus_repo="http://this.is.eucalyptus.repo",
                             euca2ools_repo="http://this.is.euca2ools.repo",
                             enterprise_repo="http://this.is.enterprise.repo")
 
-enterprise = Enterprise()
+eucalyptus.set_log_level('INFO')
+eucalyptus.set_bind_addr_value(True)
 
+node_controller = NodeController()
+node_controller.max_cores.value = 32
+node_controller.cache_size.value = 10000
+
+eucalyptus.node_controller_properties(node_controller)
+
+enterprise = Enterprise()
 enterprise.set_credentials(clientkey="myclientkey",
                            clientcert="myclientcert")
 

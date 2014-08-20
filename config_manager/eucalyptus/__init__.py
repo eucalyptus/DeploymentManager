@@ -16,6 +16,7 @@
 
 from config_manager.baseconfig import BaseConfig, EucalyptusProperty
 import copy
+from config_manager.eucalyptus.topology.cluster.nodes import NodeController
 
 
 class Eucalyptus(BaseConfig):
@@ -26,7 +27,7 @@ class Eucalyptus(BaseConfig):
                                          read_file_path=None,
                                          version=None)
         self.log_level = self.create_property(json_name='log-level')
-        self.set_bind_addr = self.create_property('set_bind_addr', value=True)
+        self.bind_addr = self.create_property('set_bind_addr')
         self.eucalyptus_repo = self.create_property('eucalyptus-repo')
         self.euca2ools_repo = self.create_property('euca2ools-repo')
         self.enterprise_repo = self.create_property('enterprise-repo')
@@ -67,6 +68,9 @@ class Eucalyptus(BaseConfig):
     def add_enterprise_credentials(self, enterprise):
         self.enterprise.value = enterprise
 
+    def set_bind_addr_value(self, value):
+        self.bind_addr.value = value
+
     def set_log_level(self, log_level):
         self.log_level.value = log_level
 
@@ -77,3 +81,12 @@ class Eucalyptus(BaseConfig):
             self.euca2ools_repo.value = euca2ools_repo
         if enterprise_repo:
             self.enterprise_repo.value = enterprise_repo
+
+    def node_controller_properties(self, nc_properties):
+        ncdict = {} # or have a _nc_properties dict??
+        if isinstance(nc_properties, NodeController):
+            if nc_properties.max_cores.value:
+                ncdict['max-cores'] = nc_properties.max_cores.value
+            if nc_properties.cache_size.value:
+                ncdict['cache-size'] = nc_properties.cache_size.value
+        self.nc.value = ncdict
