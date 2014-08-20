@@ -6,7 +6,7 @@ def test_load():
     assert PAGINATION is False
     assert RESOURCE_METHODS == ['GET', 'POST', 'DELETE']
     assert ['GET', 'PATCH', 'PUT', 'DELETE'] == ITEM_METHODS
-    assert lookup_url == 'regex("[\w-]+")'
+    assert lookup_url == 'regex("[\.\w-]+")'
 
 
 def test_machine_keys():
