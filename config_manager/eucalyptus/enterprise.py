@@ -14,12 +14,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from config_manager.baseconfig import BaseConfig
 
-class Enterprise:
-    def __init__(self, clientcert=None, clientkey=None):
-        self.clientcert = clientcert
-        self.clientkey = clientkey
 
-    def to_dict(self):
-        return {'clientcert': self.clientcert,
-                'clientkey': self.clientkey}
+class Enterprise(BaseConfig):
+    def __init__(self, name=None):
+        super(Enterprise, self).__init__(name=name,
+                                         description=None,
+                                         write_file_path=None,
+                                         read_file_path=None,
+                                         version=None)
+        self.clientcert = self.create_property('clientcert')
+        self.clientkey = self.create_property('clientkey')
+
+    def set_credentials(self, clientcert=None, clientkey=None):
+        self.clientcert.value = clientcert
+        self.clientkey.value = clientkey

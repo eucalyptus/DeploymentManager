@@ -39,7 +39,7 @@ class Eucalyptus(BaseConfig):
             'install-load-balancer', value=True)
         self.install_imaging_worker = self.create_property('install-imaging-worker', value=True)
         self.use_dns_delegation = self._set_eucalyptus_property(
-            name='bootstrap.webservices.use_dns_delegation', value=True)
+            name='bootstrap.webservices.use_dns_delegation')
 
     def _process_json_output(self, json_dict, show_all=False, **kwargs):
         tempdict = copy.copy(json_dict)
@@ -64,5 +64,16 @@ class Eucalyptus(BaseConfig):
     def add_topology(self, topology):
         self.topology.value = topology
 
+    def add_enterprise_credentials(self, enterprise):
+        self.enterprise.value = enterprise
+
     def set_log_level(self, log_level):
         self.log_level.value = log_level
+
+    def add_repositories(self, eucalyptus_repo=None, euca2ools_repo=None, enterprise_repo=None):
+        if eucalyptus_repo:
+            self.eucalyptus_repo.value = eucalyptus_repo
+        if euca2ools_repo:
+            self.euca2ools_repo.value = euca2ools_repo
+        if enterprise_repo:
+            self.enterprise_repo.value = enterprise_repo

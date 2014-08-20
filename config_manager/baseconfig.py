@@ -177,7 +177,7 @@ class BaseConfig(object):
 
         # Set name and config file path first to allow updating base values
         # from an existing file
-        property_type = property_type or self.__class__.__name__.lower()
+        property_type = property_type or self.__class__.__name__
         version = version or config_manager.__version__
         # Now overwrite with any params provided
         self.name = self.create_property('name', name)
