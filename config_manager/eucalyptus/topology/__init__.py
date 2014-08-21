@@ -34,17 +34,6 @@ class Topology(BaseConfig):
         self.clusters_property = self.create_property('clusters', value={})
         self.my_system_prop = self._set_eucalyptus_property('my_system_prop', value='mysystem')
 
-    def add_clusters2(self, clusters):
-        if not clusters:
-            raise ValueError('add_clusters provided empty value: "{0}"'
-                             .format(clusters))
-        if not isinstance(clusters, list):
-            clusters = [clusters]
-        clusterdict = {}
-        for cc in clusters:
-            clusterdict.update({cc.name.value: cc})
-        self.clusters_property.value = clusterdict
-
     def add_clusters(self, clusters):
         if not clusters:
             raise ValueError('add_clusters provided empty value: "{0}"'

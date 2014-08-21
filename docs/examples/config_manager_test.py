@@ -3,7 +3,7 @@ from config_manager.eucalyptus import Eucalyptus
 from config_manager.eucalyptus.enterprise import Enterprise
 from config_manager.eucalyptus.topology import Topology
 from config_manager.eucalyptus.topology.cluster import Cluster
-from config_manager.eucalyptus.topology.cluster.nodes import NodeController
+from config_manager.eucalyptus.topology.cluster.nodecontroller import NodeController
 
 
 eucalyptus = Eucalyptus()

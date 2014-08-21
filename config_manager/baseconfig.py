@@ -188,8 +188,8 @@ class BaseConfig(object):
 
         self.read_file_path = read_file_path
         self.write_file_path = write_file_path
-        self.update_from_file()
-        self.default_attributes = {}
+        if self.read_file_path:
+            self.update_from_file()
 
     def _delete_eucalyptus_property(self, name):
         eucalyptus_property = self._get_eucalyptus_property(name=name)

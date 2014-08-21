@@ -16,7 +16,7 @@
 
 from config_manager.baseconfig import BaseConfig, EucalyptusProperty
 import copy
-from config_manager.eucalyptus.topology.cluster.nodes import NodeController
+from config_manager.eucalyptus.topology.cluster.nodecontroller import NodeController
 
 
 class Eucalyptus(BaseConfig):

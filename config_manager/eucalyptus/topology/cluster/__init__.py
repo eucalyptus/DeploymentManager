@@ -14,30 +14,58 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from config_manager.baseconfig import BaseConfig
+from config_manager.eucalyptus.topology.cluster.blockstorage import BlockStorage
+from config_manager.eucalyptus.topology.cluster.clustercontroller import ClusterController
+from config_manager.eucalyptus.topology.cluster.nodecontroller import NodeController
+
+
 import copy
 
 
 class Cluster(BaseConfig):
     def __init__(self,
-                 name=None,
+                 name,
+                 description=None,
+                 read_file_path=None,
+                 write_file_path=None,
                  property_type=None,
-                 cc_hostname=None,
-                 sc_hostname=None):
+                 version=None
+                 ):
+        # Create the Eucalyptus software specific properties
+        self.addressespernetwork = self._set_eucalyptus_property(
+            str(name) + '.cluster.addressespernetwork', value='')
+        self.maxnetworkindex = self._set_eucalyptus_property(
+            str(name) + '.cluster.maxnetworkindex', value='')
+        self.maxnetworktag = self._set_eucalyptus_property(
+            str(name) + '.cluster.maxnetworktag', value='')
+        self.minnetworkindex = self._set_eucalyptus_property(
+            str(name) + '.cluster.minnetworkindex', value='')
+        self.minnetworktag = self._set_eucalyptus_property(
+            str(name) + '.cluster.minnetworktag', value='')
+        self.networkmode = self._set_eucalyptus_property(
+            str(name) + '.cluster.networkmode', value='')
+        self.sourcehostname = self._set_eucalyptus_property(
+            str(name) + '.cluster.sourcehostname', value='')
+        self.usenetworktags = self._set_eucalyptus_property(
+            str(name) + '.cluster.usenetworktags', value='')
+        self.vnetnetmask = self._set_eucalyptus_property(
+            str(name) + '.cluster.vnetnetmask', value='')
+        self.vnetsubnet = self._set_eucalyptus_property(
+            str(name) + '.cluster.vnetsubnet', value='')
+        self.vnettype = self._set_eucalyptus_property(
+            str(name) + '.cluster.vnettype', value='')
+
+        # Create storage and cluster controller configuration (blocks) properties
+        self.block_storage = self.create_property('block_storage', value=None)
+        self.network = self.create_property('network', value=None)
+        self.cluster_controllers = self.create_property('cluster_controllers', value=None)
+        self.vmware_brokers = self.create_property('vmware_brokers', value=None)
+        self.nodes = self.create_property('nodes', value=[])
+
+        # Baseconfig init() will read in default values from read_file_path if it is populated.
         super(Cluster, self).__init__(name=name,
-                                      description=None,
-                                      read_file_path=None,
-                                      write_file_path=None,
+                                      description=description,
+                                      read_file_path=read_file_path,
+                                      write_file_path=write_file_path,
                                       property_type=property_type,
-                                      version=None)
-        self.cc_hostname = self.create_property('cc_hostname', value=cc_hostname)
-        self.sc_hostname = self.create_property('sc_hostname', value=sc_hostname)
-
-
-class NodeControllers(BaseConfig):
-    def __init__(self):
-        self.max_cores = 8
-        self.cache_size = 40000
-
-    def to_dict(self):
-        return {'max-cores': self.max_cores,
-                'cache-size': self.cache_size}
+                                      version=version)
