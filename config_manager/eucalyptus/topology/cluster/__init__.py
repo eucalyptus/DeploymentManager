@@ -17,8 +17,6 @@ from config_manager.baseconfig import BaseConfig
 from config_manager.eucalyptus.topology.cluster.blockstorage import BlockStorage
 from config_manager.eucalyptus.topology.cluster.clustercontroller import ClusterController
 from config_manager.eucalyptus.topology.cluster.nodecontroller import NodeController
-
-
 import copy
 
 
