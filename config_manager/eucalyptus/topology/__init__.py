@@ -32,7 +32,6 @@ class Topology(BaseConfig):
         self.walrus = self.create_property('walrus')
         self.user_facing_services = self.create_property('user_facing')
         self.clusters_property = self.create_property('clusters', value={})
-        self.my_system_prop = self._set_eucalyptus_property('my_system_prop', value='mysystem')
 
     def add_clusters(self, clusters):
         if not clusters:
@@ -50,10 +49,8 @@ class Topology(BaseConfig):
                                  .format(cluster.name.value))
             self.clusters_property.value[cluster.name.value] = cluster
 
-    def create_cluster(self, name, cc_hostname=None, sc_hostname=None):
-        cluster = Cluster(name,
-                          cc_hostname=cc_hostname,
-                          sc_hostname=sc_hostname)
+    def create_cluster(self, name, read_file_path=None, write_file_path=None):
+        cluster = Cluster(name, read_file_path=read_file_path, write_file_path=write_file_path)
         self.add_clusters(cluster)
 
     def get_cluster(self, clustername):
@@ -83,3 +80,12 @@ class Topology(BaseConfig):
 
     def add_user_facing_services(self, user_facing_services):
         self.user_facing_services = user_facing_services
+
+    def _aggregate_eucalyptus_properties(self, show_all=False):
+        eucaproperties = {}
+        for key in self.clusters_property.value:
+            cluster = self.clusters_property.value[key]
+            eucaproperties.update(cluster._aggregate_eucalyptus_properties(show_all=show_all))
+        agg_dict = super(Topology, self)._aggregate_eucalyptus_properties(show_all=show_all)
+        eucaproperties.update(agg_dict)
+        return eucaproperties

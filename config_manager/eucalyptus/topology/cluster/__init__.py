@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from config_manager.baseconfig import BaseConfig
+from config_manager.namespace import Namespace
 from config_manager.eucalyptus.topology.cluster.blockstorage import BlockStorage
 from config_manager.eucalyptus.topology.cluster.clustercontroller import ClusterController
 from config_manager.eucalyptus.topology.cluster.nodecontroller import NodeController
@@ -30,28 +31,50 @@ class Cluster(BaseConfig):
                  version=None
                  ):
         # Create the Eucalyptus software specific properties
-        self.addressespernetwork = self._set_eucalyptus_property(
-            str(name) + '.cluster.addressespernetwork', value='')
-        self.maxnetworkindex = self._set_eucalyptus_property(
-            str(name) + '.cluster.maxnetworkindex', value='')
-        self.maxnetworktag = self._set_eucalyptus_property(
-            str(name) + '.cluster.maxnetworktag', value='')
-        self.minnetworkindex = self._set_eucalyptus_property(
-            str(name) + '.cluster.minnetworkindex', value='')
-        self.minnetworktag = self._set_eucalyptus_property(
-            str(name) + '.cluster.minnetworktag', value='')
-        self.networkmode = self._set_eucalyptus_property(
-            str(name) + '.cluster.networkmode', value='')
-        self.sourcehostname = self._set_eucalyptus_property(
-            str(name) + '.cluster.sourcehostname', value='')
-        self.usenetworktags = self._set_eucalyptus_property(
-            str(name) + '.cluster.usenetworktags', value='')
-        self.vnetnetmask = self._set_eucalyptus_property(
-            str(name) + '.cluster.vnetnetmask', value='')
-        self.vnetsubnet = self._set_eucalyptus_property(
-            str(name) + '.cluster.vnetsubnet', value='')
-        self.vnettype = self._set_eucalyptus_property(
-            str(name) + '.cluster.vnettype', value='')
+        self.eucalyptus_properties.create_property(
+            name='addressespernetwork',
+            property_string=str(name) + '.cluster.addressespernetwork',
+            value=None)
+        self.eucalyptus_properties.create_property(
+            name='maxnetworkindex',
+            property_string=str(name) + '.cluster.maxnetworkindex',
+            value=None)
+        self.eucalyptus_properties.create_property(
+            name='maxnetworktag',
+            property_string=str(name) + '.cluster.maxnetworktag',
+            value=None)
+        self.eucalyptus_properties.create_property(
+            name='minnetworkindex',
+            property_string=str(name) + '.cluster.minnetworkindex',
+            value=None)
+        self.eucalyptus_properties.create_property(
+            name='minnetworktag',
+            property_string=str(name) + '.cluster.minnetworktag',
+            value=None)
+        self.eucalyptus_properties.create_property(
+            name='networkmode',
+            property_string=str(name) + '.cluster.networkmode',
+            value=None)
+        self.eucalyptus_properties.create_property(
+            name='sourcehostname',
+            property_string=str(name) + '.cluster.sourcehostname',
+            value=None)
+        self.eucalyptus_properties.create_property(
+            name='usenetworktags',
+            property_string=str(name) + '.cluster.usenetworktags',
+            value=None)
+        self.eucalyptus_properties.create_property(
+            name='vnetnetmask',
+            property_string=str(name) + '.cluster.vnetnetmask',
+            value=None)
+        self.eucalyptus_properties.create_property(
+            name='vnetsubnet',
+            property_string=str(name) + '.cluster.vnetsubnet',
+            value=None)
+        self.eucalyptus_properties.create_property(
+            name='vnettype',
+            property_string=str(name) + '.cluster.vnettype',
+            value=None)
 
         # Create storage and cluster controller configuration (blocks) properties
         self.block_storage = self.create_property('block_storage', value=None)

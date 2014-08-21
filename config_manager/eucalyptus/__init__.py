@@ -39,19 +39,20 @@ class Eucalyptus(BaseConfig):
         self.install_load_balancer = self.create_property(
             'install-load-balancer', value=True)
         self.install_imaging_worker = self.create_property('install-imaging-worker', value=True)
-        self.use_dns_delegation = self._set_eucalyptus_property(
-            name='bootstrap.webservices.use_dns_delegation')
+        self.eucalyptus_properties.use_dns_delegation = EucalyptusProperty(
+            name='bootstrap.webservices.use_dns_delegation',
+            properties_manager=self.eucalyptus_properties, value=None)
 
     def _process_json_output(self, json_dict, show_all=False, **kwargs):
         tempdict = copy.copy(json_dict)
         eucaprops = {}
-        aggdict = self._aggregate_eucalyptus_properties()
+        aggdict = self._aggregate_eucalyptus_properties(show_all=show_all)
         for key in aggdict:
             value = aggdict[key]
             # handle value of 'False' as valid
             if value or value is False:
                 eucaprops[key] = aggdict[key]
-            elif not value and show_all:
+            elif show_all:
                 eucaprops["!" + str(key)] = aggdict[key]
         if eucaprops:
             if 'eucalyptus_properties' not in tempdict:

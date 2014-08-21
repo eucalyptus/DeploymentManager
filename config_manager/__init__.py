@@ -16,3 +16,4 @@
 
 
 __version__ = 0.1
+DEFAULT_NOT_DEFINED = "DEFAULT NOT DEFINED"

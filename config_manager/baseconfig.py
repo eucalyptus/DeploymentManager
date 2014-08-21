@@ -21,10 +21,11 @@ from pprint import pformat
 from shutil import copyfile
 import difflib
 import config_manager
+from eucalyptus_properties import EucalyptusProperties, EucalyptusProperty
+import config_manager
 
 
 class ConfigProperty(object):
-    DEFAULT_NOT_DEFINED = "DEFAULT NOT DEFINED"
 
     def __init__(self,
                  json_name,
@@ -33,7 +34,7 @@ class ConfigProperty(object):
                  type=None,
                  validate_callback=None,
                  reset_callback=None,
-                 default_value=DEFAULT_NOT_DEFINED):
+                 default_value=config_manager.DEFAULT_NOT_DEFINED):
         assert isinstance(configmanager, BaseConfig)
         self.configmanager = configmanager
         self.name = json_name
@@ -85,61 +86,6 @@ class ConfigProperty(object):
                                                  val_str)
 
 
-class EucalyptusProperty(object):
-    DEFAULT_NOT_DEFINED = "DEFAULT NOT DEFINED"
-
-    def __init__(self,
-                 name,
-                 configmanager,
-                 value=None,
-                 objtype=None,
-                 validate_callback=None,
-                 reset_callback=None,
-                 default_value=DEFAULT_NOT_DEFINED):
-        assert isinstance(configmanager, BaseConfig)
-        self._value = None
-        self.configmanager = configmanager
-        self.name = name
-        if validate_callback:
-            self.validate = validate_callback
-        if reset_callback:
-            self.reset = reset_callback
-        # self.set(value)
-        self.value = value
-        self.default_value = default_value
-
-    @property
-    def value(self):
-        return self._value
-
-    @value.setter
-    def value(self, newvalue):
-        newvalue = self.validate(newvalue)
-        self._value = newvalue
-
-    def delete(self):
-        self.configmanager.delete_eucalyptus_property(self)
-
-    def validate(self, value):
-        return value
-
-    def reset_to_default(self):
-        if self.default_value == self.DEFAULT_NOT_DEFINED:
-            return
-        else:
-            self.value = self.default_value
-
-    def update(self):
-        value = self.validate(self.value)
-
-    def __repr__(self):
-        # val_str = str(self.value.__class__.__name__) + "()"
-        val_str = str(self.value)
-        return '{0}:(:"{1}", "{2}")'.format(self.__class__.__name__,
-                                            self.name,
-                                            val_str)
-
-
 class BaseConfig(object):
     """
     Intention of this class is to provide utilities around reading and writing
@@ -171,12 +117,6 @@ class BaseConfig(object):
         """
         # Set name and config file path first to allow updating base values
         # from an existing file
-        self._json_properties = {}
-        # used for storing eucalyptus_properties
-        self._eucalyptus_properties = []
-
-        # Set name and config file path first to allow updating base values
-        # from an existing file
         property_type = property_type or self.__class__.__name__
         version = version or config_manager.__version__
         # Now overwrite with any params provided
@@ -191,31 +131,17 @@ class BaseConfig(object):
         if self.read_file_path:
             self.update_from_file()
 
-    def _delete_eucalyptus_property(self, name):
-        eucalyptus_property = self._get_eucalyptus_property(name=name)
-        if eucalyptus_property:
-            self._eucalyptus_properties.pop(eucalyptus_property)
-            return True
-        if hasattr(self, name):
-            self.__delattr__(name)
+    @property
+    def eucalyptus_properties(self):
+        if not hasattr(self, '_eucalyptus_properties'):
+            self._eucalyptus_properties = EucalyptusProperties()
+        return self._eucalyptus_properties
 
-    def _set_eucalyptus_property(self, name=None, value=None):
-        eucalyptus_property = self._get_eucalyptus_property(name=name)
-        if not eucalyptus_property:
-            eucalyptus_property = EucalyptusProperty(name=name,
-                                                     configmanager=self,
-                                                     value=value)
-            self._eucalyptus_properties.append(eucalyptus_property)
-        else:
-            eucalyptus_property.value = value
-        return eucalyptus_property
-
-    def _get_eucalyptus_property(self, name):
-        if name:
-            for eprop in self._eucalyptus_properties:
-                if eprop.name == name:
-                    return eprop
-        return None
+    @property
+    def json_properties(self):
+        if not hasattr(self, '_json_properties'):
+            self._json_properties = {}
+        return self._json_properties
 
     def __setattr__(self, key, value, force=False):
         attr = getattr(self, key, None)
@@ -240,20 +166,20 @@ class BaseConfig(object):
         """
         helper method for mapping json to python properties
         """
-        return self._json_properties[property_name]
+        return self.json_properties[property_name]
 
     def _set_json_property(self, property_name, value):
         """
         helper method for mapping json to python properties
         """
-        self._json_properties[property_name] = value
+        self.json_properties[property_name] = value
 
     def _del_json_property(self, property_name):
         """
         helper method for mapping json to python properties
         """
-        if property_name in self._json_properties:
-            self._json_properties.pop(property_name)
+        if property_name in self.json_properties:
+            self.json_properties.pop(property_name)
 
     def __repr__(self):
         """
@@ -347,7 +273,7 @@ class BaseConfig(object):
         if newdict:
             for key in newdict:
                 value = newdict[key]
-                if key not in self._json_properties:
+                if key not in self.json_properties:
                     print ('warning "{0}" not found in json properties for '
                            'class: "{1}"'.format(key, self.__class__))
                 else:
@@ -422,19 +348,16 @@ class BaseConfig(object):
             save_file.write(config_json)
             save_file.flush()
 
-    def _aggregate_eucalyptus_properties(self):
+    def _aggregate_eucalyptus_properties(self, show_all=False):
         """
         Gathers all the eucalyptus software specific properties for child
         baseconfig object
         :returns dict
         """
-        property_dict = {}
-        for prop in self._eucalyptus_properties:
-            property_dict[prop.name] = prop.value
-
+        property_dict = self.eucalyptus_properties.get_eucalyptus_property_dict(show_all=show_all)
         for key in self._get_keys():
             attr = self.__getattribute__(key)
             if isinstance(attr, ConfigProperty) and \
                     isinstance(attr.value, BaseConfig):
-                property_dict.update(attr.value._aggregate_eucalyptus_properties())
+                property_dict.update(attr.value._aggregate_eucalyptus_properties(show_all=show_all))
         return property_dict

@@ -13,7 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from config_manager.baseconfig import BaseConfig
+from config_manager.baseconfig import BaseConfig, EucalyptusProperty
 from config_manager.eucalyptus.topology.cluster.blockstorage.storage_controller import \
     Storage_Controller
 import config_manager.eucalyptus.topology.cluster.blockstorage.storage_backends
@@ -46,61 +46,114 @@ class BlockStorage(BaseConfig):
                  storage_backend=None):
 
         # Create the Eucalyptus software specific properties
-        self.blockstoragemanager = self._set_eucalyptus_property(
-            str(self.cluster_name) + '.storage.blockstoragemanager', value='')
-        self.chapuser = self._set_eucalyptus_property(
-            str(self.cluster_name) + '.storage.chapuser', value='')
-        self.dasdevice = self._set_eucalyptus_property(
-            str(self.cluster_name) + '.storage.dasdevice', value='')
-        self.deletedvolexpiration = self._set_eucalyptus_property(
-            str(self.cluster_name) + '.storage.deletedvolexpiration', value='')
-        self.maxconcurrentsnapshotuploads = self._set_eucalyptus_property(
-            str(self.cluster_name) + '.storage.maxconcurrentsnapshotuploads', value='')
-        self.maxsnapshotpartsqueuesize = self._set_eucalyptus_property(
-            str(self.cluster_name) + '.storage.maxsnapshotpartsqueuesize', value='')
-        self.maxsnaptransferretries = self._set_eucalyptus_property(
-            str(self.cluster_name) + '.storage.maxsnaptransferretries', value='')
-        self.maxtotalvolumesizeingb = self._set_eucalyptus_property(
-            str(self.cluster_name) + '.storage.maxtotalvolumesizeingb', value='')
-        self.maxvolumesizeingb = self._set_eucalyptus_property(
-            str(self.cluster_name) + '.storage.maxvolumesizeingb', value='')
-        self.multihostaccess = self._set_eucalyptus_property(
-            str(self.cluster_name) + '.storage.multihostaccess', value='')
-        self.ncpaths = self._set_eucalyptus_property(
-            str(self.cluster_name) + '.storage.ncpaths', value='')
-        self.poolname = self._set_eucalyptus_property(
-            str(self.cluster_name) + '.storage.poolname', value='')
-        self.resourceprefix = self._set_eucalyptus_property(
-            str(self.cluster_name) + '.storage.resourceprefix', value='')
-        self.resourcesuffix = self._set_eucalyptus_property(
-            str(self.cluster_name) + '.storage.resourcesuffix', value='')
-        self.sanhost = self._set_eucalyptus_property(
-            str(self.cluster_name) + '.storage.sanhost', value='')
-        self.sanpassword = self._set_eucalyptus_property(
-            str(self.cluster_name) + '.storage.sanpassword', value='')
-        self.sanuser = self._set_eucalyptus_property(
-            str(self.cluster_name) + '.storage.sanuser', value='')
-        self.scpaths = self._set_eucalyptus_property(
-            str(self.cluster_name) + '.storage.scpaths', value='')
-        self.shouldtransfersnapshots = self._set_eucalyptus_property(
-            str(self.cluster_name) + '.storage.shouldtransfersnapshots', value='')
-        self.snapshotpartsizeinmb = self._set_eucalyptus_property(
-            str(self.cluster_name) + '.storage.snapshotpartsizeinmb', value='')
-        self.snapshotuploadtimeoutinhours = self._set_eucalyptus_property(
-            str(self.cluster_name) + '.storage.snapshotuploadtimeoutinhours', value='')
-        self.storeprefix = self._set_eucalyptus_property(
-            str(self.cluster_name) + '.storage.storeprefix', value='')
-        self.tasktimeout = self._set_eucalyptus_property(
-            str(self.cluster_name) + '.storage.tasktimeout', value='')
-        self.tid = self._set_eucalyptus_property(
-            str(self.cluster_name) + '.storage.tid', value='')
-        self.timeoutinmillis = self._set_eucalyptus_property(
-            str(self.cluster_name) + '.storage.timeoutinmillis', value='')
-        self.volumesdir = self._set_eucalyptus_property(
-            str(self.cluster_name) + '.storage.volumesdir', value='')
-        self.zerofillvolumes = self._set_eucalyptus_property(
-            str(self.cluster_name) + '.storage.zerofillvolumes', value='')
-
+        self.eucalyptus_properties.create_property(
+            name='blockstoragemanager',
+            property_string=str(cluster_name) + '.storage.blockstoragemanager',
+            value=None)
+        self.eucalyptus_properties.create_property(
+            name='chapuser',
+            property_string=str(cluster_name) + '.storage.chapuser',
+            value=None)
+        self.eucalyptus_properties.create_property(
+            name='dasdevice',
+            property_string=str(cluster_name) + '.storage.dasdevice',
+            value=None)
+        self.eucalyptus_properties.create_property(
+            name='deletedvolexpiration',
+            property_string=str(cluster_name) + '.storage.deletedvolexpiration',
+            value=None)
+        self.eucalyptus_properties.create_property(
+            name='maxconcurrentsnapshotuploads',
+            property_string=str(cluster_name) + '.storage.maxconcurrentsnapshotuploads',
+            value=None)
+        self.eucalyptus_properties.create_property(
+            name='maxsnapshotpartsqueuesize',
+            property_string=str(cluster_name) + '.storage.maxsnapshotpartsqueuesize',
+            value=None)
+        self.eucalyptus_properties.create_property(
+            name='maxsnaptransferretries',
+            property_string=str(cluster_name) + '.storage.maxsnaptransferretries',
+            value=None)
+        self.eucalyptus_properties.create_property(
+            name='maxtotalvolumesizeingb',
+            property_string=str(cluster_name) + '.storage.maxtotalvolumesizeingb',
+            value=None)
+        self.eucalyptus_properties.create_property(
+            name='maxvolumesizeingb',
+            property_string=str(cluster_name) + '.storage.maxvolumesizeingb',
+            value=None)
+        self.eucalyptus_properties.create_property(
+            name='multihostaccess',
+            property_string=str(cluster_name) + '.storage.multihostaccess',
+            value=None)
+        self.eucalyptus_properties.create_property(
+            name='ncpaths',
+            property_string=str(cluster_name) + '.storage.ncpaths',
+            value=None)
+        self.eucalyptus_properties.create_property(
+            name='poolname',
+            property_string=str(cluster_name) + '.storage.poolname',
+            value=None)
+        self.eucalyptus_properties.create_property(
+            name='resourceprefix',
+            property_string=str(cluster_name) + '.storage.resourceprefix',
+            value=None)
+        self.eucalyptus_properties.create_property(
+            name='resourcesuffix',
+            property_string=str(cluster_name) + '.storage.resourcesuffix',
+            value=None)
+        self.eucalyptus_properties.create_property(
+            name='sanhost',
+            property_string=str(cluster_name) + '.storage.sanhost',
+            value=None)
+        self.eucalyptus_properties.create_property(
+            name='sanpassword',
+            property_string=str(cluster_name) + '.storage.sanpassword',
+            value=None)
+        self.eucalyptus_properties.create_property(
+            name='sanuser',
+            property_string=str(cluster_name) + '.storage.sanuser',
+            value=None)
+        self.eucalyptus_properties.create_property(
+            name='scpaths',
+            property_string=str(cluster_name) + '.storage.scpaths',
+            value=None)
+        self.eucalyptus_properties.create_property(
+            name='shouldtransfersnapshots',
+            property_string=str(cluster_name) + '.storage.shouldtransfersnapshots',
+            value=None)
+        self.eucalyptus_properties.create_property(
+            name='snapshotpartsizeinmb',
+            property_string=str(cluster_name) + '.storage.snapshotpartsizeinmb',
+            value=None)
+        self.eucalyptus_properties.create_property(
+            name='snapshotuploadtimeoutinhours',
+            property_string=str(cluster_name) + '.storage.snapshotuploadtimeoutinhours',
+            value=None)
+        self.eucalyptus_properties.create_property(
+            name='storeprefix',
+            property_string=str(cluster_name) + '.storage.storeprefix',
+            value=None)
+        self.eucalyptus_properties.create_property(
+            name='tasktimeout',
+            property_string=str(cluster_name) + '.storage.tasktimeout',
+            value=None)
+        self.eucalyptus_properties.create_property(
+            name='tid',
+            property_string=str(cluster_name) + '.storage.tid',
+            value=None)
+        self.eucalyptus_properties.create_property(
+            name='timeoutinmillis',
+            property_string=str(cluster_name) + '.storage.timeoutinmillis',
+            value=None)
+        self.eucalyptus_properties.create_property(
+            name='volumesdir',
+            property_string=str(cluster_name) + '.storage.volumesdir',
+            value=None)
+        self.eucalyptus_properties.create_property(
+            name='zerofillvolumes',
+            property_string=str(cluster_name) + '.storage.zerofillvolumes',
+            value=None)
         # Create json configuration (blocks) properties
         self.storage_controllers = self.create_property('storage_controllers', value=[])
         self.backend_type = self.create_property(json_name='backend_type',
