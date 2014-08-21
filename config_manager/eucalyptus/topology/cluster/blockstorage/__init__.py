@@ -17,13 +17,19 @@ from config_manager.baseconfig import BaseConfig
 from config_manager.eucalyptus.topology.cluster.blockstorage.storage_controller import \
     Storage_Controller
 import config_manager.eucalyptus.topology.cluster.blockstorage.storage_backends
+from storage_backends.ceph import Ceph
+from storage_backends.das import Das
+from storage_backends.emc import Emc
+from storage_backends.equalogic import Equalogic
+from storage_backends.netapp import Netapp
+from storage_backends.overlay import Overlay
 
-storage_backends = {'ceph': storage_backends.ceph,
-                    'das': storage_backends.das,
-                    'emc': storage_backends.emc,
-                    'eql': storage_backends.eql,
-                    'netapp': storage_backends.netapp,
-                    'overlay': storage_backends.overlay}
+storage_backends = {'ceph': Ceph,
+                    'das': Das,
+                    'emc': Emc,
+                    'equalogic': Equalogic,
+                    'netapp': Netapp,
+                    'overlay': Overlay}
 
 
 class BlockStorage(BaseConfig):
