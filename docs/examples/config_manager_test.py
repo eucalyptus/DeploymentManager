@@ -28,9 +28,9 @@ enterprise.set_credentials(clientkey="myclientkey",
 
 eucalyptus.add_enterprise_credentials(enterprise)
 
-cluster1 = Cluster('PARTI00')
-cluster2 = Cluster('PARTI01')
-topology.add_clusters([cluster1, cluster2])
+# cluster1 = Cluster('PARTI00')
+# cluster2 = Cluster('PARTI01')
+# topology.add_clusters([cluster1, cluster2])
 
 eucalyptus.add_topology(topology)
 
