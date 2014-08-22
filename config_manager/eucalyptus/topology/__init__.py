@@ -49,8 +49,9 @@ class Topology(BaseConfig):
                                  .format(cluster.name.value))
             self.clusters_property.value[cluster.name.value] = cluster
 
-    def create_cluster(self, name, read_file_path=None, write_file_path=None):
-        cluster = Cluster(name, read_file_path=read_file_path, write_file_path=write_file_path)
+    def create_cluster(self, name, hypervisor, read_file_path=None, write_file_path=None):
+        cluster = Cluster(name=name, hypervisor=hypervisor, read_file_path=read_file_path,
+                          write_file_path=write_file_path)
         self.add_clusters(cluster)
         return cluster
 

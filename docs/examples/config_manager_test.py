@@ -15,12 +15,13 @@ eucalyptus.add_repositories(eucalyptus_repo="http://this.is.eucalyptus.repo",
 
 eucalyptus.set_log_level('INFO')
 eucalyptus.set_bind_addr_value(True)
-
-node_controller = NodeController()
+topo = Topology()
+eucalyptus.add_topology(topo)
+cluster = topo.create_cluster('CLUSTER1', hypervisor='kvm')
+node_controller = cluster.create_node(ip='1.1.1.1')
 node_controller.max_cores.value = 32
 node_controller.cache_size.value = 10000
 
-eucalyptus.node_controller_properties(node_controller)
 
 enterprise = Enterprise()
 enterprise.set_credentials(clientkey="myclientkey",
@@ -28,10 +29,7 @@ enterprise.set_credentials(clientkey="myclientkey",
 
 eucalyptus.add_enterprise_credentials(enterprise)
 
-# cluster1 = Cluster('PARTI00')
-# cluster2 = Cluster('PARTI01')
-# topology.add_clusters([cluster1, cluster2])
-
-eucalyptus.add_topology(topology)
-
+print "### JSON with Hidden(!) Attributes: ###"
+print eucalyptus.to_json(show_all=True)
+print "\n### Actual JSON: ###"
 print eucalyptus.to_json()
