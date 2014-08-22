@@ -17,7 +17,7 @@
 from config_manager.eucalyptus.topology.cluster.nodecontroller import NodeController
 
 
-class Hyperv(NodeController):
+class Vsphere(NodeController):
 
     def __init__(self,
                  name,
@@ -28,9 +28,9 @@ class Hyperv(NodeController):
                  version=None
                  ):
         # Baseconfig init() will read in default values from read_file_path if it is populated.
-        super(Hyperv, self).__init__(name=name,
-                                     hypervisor=str(self.__class__.__name__).lower(),
-                                     description=description,
-                                     read_file_path=read_file_path,
-                                     write_file_path=write_file_path,
-                                     version=version)
+        super(Vsphere, self).__init__(name=name,
+                                      hypervisor=str(self.__class__.__name__).lower(),
+                                      description=description,
+                                      read_file_path=read_file_path,
+                                      write_file_path=write_file_path,
+                                      version=version)

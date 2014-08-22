@@ -82,12 +82,3 @@ class Eucalyptus(BaseConfig):
             self.euca2ools_repo.value = euca2ools_repo
         if enterprise_repo:
             self.enterprise_repo.value = enterprise_repo
-
-    def node_controller_properties(self, nc_properties):
-        ncdict = {}  # or have a _nc_properties dict??
-        if isinstance(nc_properties, NodeController):
-            if nc_properties.max_cores.value:
-                ncdict['max-cores'] = nc_properties.max_cores.value
-            if nc_properties.cache_size.value:
-                ncdict['cache-size'] = nc_properties.cache_size.value
-        self.nc.value = ncdict

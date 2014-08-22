@@ -52,6 +52,7 @@ class Topology(BaseConfig):
     def create_cluster(self, name, read_file_path=None, write_file_path=None):
         cluster = Cluster(name, read_file_path=read_file_path, write_file_path=write_file_path)
         self.add_clusters(cluster)
+        return cluster
 
     def get_cluster(self, clustername):
         if clustername in self.clusters_property.value:
