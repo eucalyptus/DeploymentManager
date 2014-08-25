@@ -117,6 +117,7 @@ class BaseConfig(object):
         """
         # Set name and config file path first to allow updating base values
         # from an existing file
+
         property_type = property_type or self.__class__.__name__
         version = version or config_manager.__version__
         # Now overwrite with any params provided
@@ -135,6 +136,7 @@ class BaseConfig(object):
     def eucalyptus_properties(self):
         if not hasattr(self, '_eucalyptus_properties'):
             self._eucalyptus_properties = EucalyptusProperties()
+        assert isinstance(self._eucalyptus_properties, EucalyptusProperties)
         return self._eucalyptus_properties
 
     @property

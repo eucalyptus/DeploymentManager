@@ -133,6 +133,6 @@ class EucalyptusProperties(Namespace):
     def get_eucalyptus_property_dict(self, show_all=True):
         prop_dict = {}
         for prop in self.get_all_properties():
-            if show_all or prop.value or prop.value is False:
+            if show_all or prop.value is not None:
                 prop_dict[prop.name] = prop.value
         return prop_dict

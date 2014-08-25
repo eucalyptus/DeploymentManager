@@ -15,6 +15,7 @@
 # limitations under the License.
 from config_manager.baseconfig import BaseConfig
 from config_manager.eucalyptus.topology.cluster.blockstorage import BlockStorage
+import config_manager.eucalyptus.topology.cluster.blockstorage
 from config_manager.eucalyptus.topology.cluster.clustercontroller import ClusterController
 from config_manager.eucalyptus.topology.cluster.nodecontroller import NodeController
 from config_manager.eucalyptus.topology.cluster.nodecontroller.hyperv import Hyperv
@@ -104,6 +105,23 @@ class Cluster(BaseConfig):
                                       property_type=property_type,
                                       version=version)
 
+    def add_block_storage(self, block_storage):
+        assert isinstance(block_storage, BlockStorage), 'Cant add non block_storage type:{0}'\
+            .format(type(block_storage))
+        if self.block_storage.value:
+            raise ValueError('Delete existing block storage before adding another')
+        self.block_storage.value = block_storage
+
+    def create_block_storage(self, backend_type, name=None, read_file_path=None):
+        name = name or self.name.value + "_block_storage"
+        block_storage = BlockStorage(name=name, cluster_name=self.name,
+                                     backend_type=backend_type, read_file_path=read_file_path)
+        self.add_block_storage(block_storage)
+        return block_storage
+
+    def delete_block_storage(self):
+        self.block_storage.value = None
+
     def validate_hypervisor_type(self, hypervisor):
         try:
             if hypervisor is not None:
@@ -139,7 +157,7 @@ class Cluster(BaseConfig):
 
     def get_node(self, name):
         for node in self.nodes.value:
-            if node.name == name:
+            if node.name.value == name:
                 return node
         return None
 

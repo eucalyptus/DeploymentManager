@@ -21,17 +21,21 @@ from config_manager.eucalyptus.topology.ufs import UserFacingServices
 
 
 class Topology(BaseConfig):
-    def __init__(self, name=None):
-        super(Topology, self).__init__(name=name,
-                                       description=None,
-                                       write_file_path=None,
-                                       read_file_path=None,
-                                       version=None)
-
+    def __init__(self,
+                 name=None,
+                 description=None,
+                 read_file_path=None,
+                 write_file_path=None,
+                 version=None):
         self.cloud_controllers = self.create_property('cloud_controller')
         self.walrus = self.create_property('walrus')
         self.user_facing_services = self.create_property('user_facing')
         self.clusters_property = self.create_property('clusters', value={})
+        super(Topology, self).__init__(name=name,
+                                       description=description,
+                                       write_file_path=write_file_path,
+                                       read_file_path=read_file_path,
+                                       version=version)
 
     def add_clusters(self, clusters):
         if not clusters:

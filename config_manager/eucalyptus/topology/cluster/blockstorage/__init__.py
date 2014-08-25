@@ -24,24 +24,24 @@ from storage_backends.equalogic import Equalogic
 from storage_backends.netapp import Netapp
 from storage_backends.overlay import Overlay
 
-storage_backends = {'ceph': Ceph,
-                    'das': Das,
-                    'emc': Emc,
-                    'equalogic': Equalogic,
-                    'netapp': Netapp,
-                    'overlay': Overlay}
+_STORAGE_BACKENDS = {str(Ceph.__name__).lower(): Ceph,
+                     str(Das.__name__).lower(): Das,
+                     str(Emc.__name__).lower(): Emc,
+                     str(Equalogic.__name__).lower(): Equalogic,
+                     str(Netapp.__name__).lower(): Netapp,
+                     str(Overlay.__name__).lower(): Overlay}
 
 
 class BlockStorage(BaseConfig):
     def __init__(self,
                  name,
                  cluster_name,
+                 backend_type,
                  description=None,
                  read_file_path=None,
                  write_file_path=None,
                  property_type=None,
                  version=None,
-                 backend_type=None,
                  storage_controllers=None,
                  storage_backend=None):
 
@@ -157,7 +157,8 @@ class BlockStorage(BaseConfig):
         # Create json configuration (blocks) properties
         self.storage_controllers = self.create_property('storage_controllers', value=[])
         self.backend_type = self.create_property(json_name='backend_type',
-                                                 value=backend_type)
+                                                 value=backend_type,
+                                                 validate_callback=self.validate_backend_type)
 
         # Baseconfig init() will read in default values from read_file_path if it is populated.
         super(BlockStorage, self).__init__(name=name,
@@ -166,6 +167,22 @@ class BlockStorage(BaseConfig):
                                            write_file_path=None,
                                            property_type=property_type,
                                            version=None)
+
+    def validate_backend_type(self, backend_type):
+        try:
+            if backend_type is not None:
+                _STORAGE_BACKENDS[str(backend_type).lower()]
+        except KeyError:
+            hlist = ""
+            for key in _STORAGE_BACKENDS:
+                hlist += "{0}, ".format(key)
+            raise ValueError('Unknown hypervisor type:"{0}". Possible types:"{1}"'
+                             .format(backend_type, hlist.rstrip(', ')))
+        if not hasattr(self, 'backend_type') or not self.backend_type.value:
+            return backend_type
+        if (backend_type != self.backend_type.value) and self.storage_controllers.value:
+                raise ValueError('Must remove storage controllrs to change backend_type')
+        return backend_type
 
     # todo add check for correct attributes such as matching backend type etc..
     def add_storage_controllers(self, storage_controllers):

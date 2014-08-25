@@ -14,18 +14,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from config_manager.baseconfig import BaseConfig, EucalyptusProperty
+from config_manager.baseconfig import BaseConfig, EucalyptusProperty, EucalyptusProperties
+from config_manager.eucalyptus.topology import Topology
 import copy
 from config_manager.eucalyptus.topology.cluster.nodecontroller import NodeController
 
 
 class Eucalyptus(BaseConfig):
-    def __init__(self):
-        super(Eucalyptus, self).__init__(name=None,
-                                         description=None,
-                                         write_file_path=None,
-                                         read_file_path=None,
-                                         version=None)
+    def __init__(self, description=None):
+        """
+        :type self.eucalyptus_properties: EucalyptusProperties
+        """
         self.log_level = self.create_property(json_name='log-level')
         self.bind_addr = self.create_property('set_bind_addr')
         self.eucalyptus_repo = self.create_property('eucalyptus-repo')
@@ -42,6 +41,11 @@ class Eucalyptus(BaseConfig):
         self.eucalyptus_properties.use_dns_delegation = EucalyptusProperty(
             name='bootstrap.webservices.use_dns_delegation',
             properties_manager=self.eucalyptus_properties, value=None)
+        super(Eucalyptus, self).__init__(name=None,
+                                         description=None,
+                                         write_file_path=None,
+                                         read_file_path=None,
+                                         version=None)
 
     def _process_json_output(self, json_dict, show_all=False, **kwargs):
         tempdict = copy.copy(json_dict)
@@ -66,6 +70,11 @@ class Eucalyptus(BaseConfig):
     def add_topology(self, topology):
         self.topology.value = topology
 
+    def create_topology(self, name=None, read_file_path=None):
+        topo = Topology(name=name, read_file_path=read_file_path)
+        self.add_topology(topo)
+        return topo
+
     def add_enterprise_credentials(self, enterprise):
         self.enterprise.value = enterprise
 
@@ -75,10 +84,19 @@ class Eucalyptus(BaseConfig):
     def set_log_level(self, log_level):
         self.log_level.value = log_level
 
+    def set_eucalyptus_repo(self, value):
+        self.eucalyptus_repo.value = value
+
+    def set_euca2ools_repo(self, value):
+        self.euca2ools_repo.value = value
+
+    def set_enterprise_repo(self, value):
+        self.enterprise_repo.value = value
+
     def add_repositories(self, eucalyptus_repo=None, euca2ools_repo=None, enterprise_repo=None):
         if eucalyptus_repo:
-            self.eucalyptus_repo.value = eucalyptus_repo
+            self.set_eucalyptus_repo(eucalyptus_repo)
         if euca2ools_repo:
-            self.euca2ools_repo.value = euca2ools_repo
+            self.set_euca2ools_repo(euca2ools_repo)
         if enterprise_repo:
-            self.enterprise_repo.value = enterprise_repo
+            self.set_enterprise_repo(enterprise_repo)
