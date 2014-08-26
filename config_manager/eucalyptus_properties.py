@@ -26,7 +26,8 @@ class EucalyptusProperty(object):
                  value=None,
                  validate_callback=None,
                  reset_callback=None,
-                 default_value=config_manager.DEFAULT_NOT_DEFINED):
+                 default_value=config_manager.DEFAULT_NOT_DEFINED,
+                 validate_init=False):
         assert isinstance(properties_manager, EucalyptusProperties)
         self._value = None
         self.properties_manager = properties_manager
@@ -35,7 +36,12 @@ class EucalyptusProperty(object):
             self.validate = validate_callback
         if reset_callback:
             self.reset = reset_callback
-        self.value = value
+        if not validate_init:
+            # Skip validation for instance init, assume the init value is good
+            self._value = value
+        else:
+            # Run validation on initial value before assigning to 'value'
+            self.value = value
         self.default_value = default_value
 
     @property

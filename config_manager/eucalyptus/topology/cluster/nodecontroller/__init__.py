@@ -24,6 +24,7 @@ class NodeController(BaseConfig):
                  write_file_path=None,
                  description=None,
                  version=None):
+        description = description or "Eucalyptus Node Controller Configuration Block"
         self.hypervisor = self.create_property('hypervisor', value=hypervisor)
         # Use validator to make the hypervisor name read-only
         self.hypervisor.validate = lambda x: self.hypervisor.value

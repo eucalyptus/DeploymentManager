@@ -27,6 +27,7 @@ class Topology(BaseConfig):
                  read_file_path=None,
                  write_file_path=None,
                  version=None):
+        description = description or "Eucalyptus Cloud Topology Configuration Block"
         self.cloud_controllers = self.create_property('cloud_controller')
         self.walrus = self.create_property('walrus')
         self.user_facing_services = self.create_property('user_facing')

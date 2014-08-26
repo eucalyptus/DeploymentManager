@@ -25,6 +25,7 @@ class Eucalyptus(BaseConfig):
         """
         :type self.eucalyptus_properties: EucalyptusProperties
         """
+        description = description or "Eucalyptus Cloud Global Configuration Block"
         self.log_level = self.create_property(json_name='log-level')
         self.bind_addr = self.create_property('set_bind_addr')
         self.eucalyptus_repo = self.create_property('eucalyptus-repo')

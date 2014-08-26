@@ -20,13 +20,18 @@ class Storage_Controller(BaseConfig):
 
     def __init__(self,
                  name,
+                 hostname,
                  description=None,
                  read_file_path=None,
                  write_file_path=None,
                  property_type=None,
                  version=None
                  ):
-
+        description = description or "Eucalyptus Storage Controller Host Configuration Block"
+        if not hostname:
+            raise ValueError('Storage Controller Hostname must be populated')
+        name = name or hostname
+        self.hostname = self.create_property(json_name='hostname', value=hostname)
         # Baseconfig init() will read in default values from read_file_path if it is populated.
         super(Storage_Controller, self).__init__(name=name,
                                                  description=description,
