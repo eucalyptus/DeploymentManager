@@ -17,7 +17,6 @@ from config_manager.baseconfig import BaseConfig
 from config_manager.eucalyptus_properties import EucalyptusProperty
 from config_manager.eucalyptus.topology.cluster.blockstorage import BlockStorage
 import config_manager.eucalyptus.topology.cluster.blockstorage
-from config_manager.eucalyptus.topology.cluster.clustercontroller import ClusterController
 
 from config_manager.eucalyptus.topology.cluster.nodecontroller import NodeController
 from config_manager.eucalyptus.topology.cluster.nodecontroller.hyperv import Hyperv
@@ -110,17 +109,27 @@ class Cluster(BaseConfig):
             value=None)
 
         # Create storage and cluster controller configuration (blocks) properties
-        self.block_storage = self.create_property('block_storage', value=None)
-        self.network = self.create_property('network', value=None)
-        self.cluster_controllers = self.create_property('cluster_controllers', value=None)
-        self.vmware_brokers = self.create_property('vmware_brokers', value=None)
-        self.nodes = self.create_property('nodes', value=[])
-        self.hypervisor_type = self.create_property(
-            'hypervisor_type', value=hypervisor, validate_callback=self.validate_hypervisor_type)
+
+        # Store the cluster wide block storage (backend) type, and block storage object
         self.blockstorage_type = self.create_property(
             json_name='blockstorage_type',
             value=blockstorage_type,
             validate_callback=self.validate_blockstorage_type)
+        self.block_storage = self.create_property('block_storage', value=None)
+
+        # Store network info in network obj...
+        self.network = self.create_property('network', value=None)
+
+        # Store the cluster controller host objects...
+        self.cluster_controllers = self.create_property('cluster_controllers', value=[])
+
+        # Store the cluster wide hypervisor type and list of node objects...
+        self.hypervisor_type = self.create_property(
+            'hypervisor_type', value=hypervisor, validate_callback=self.validate_hypervisor_type)
+        self.nodes = self.create_property('nodes', value=[])
+
+        # todo decide if this is needed, or if esx node types are enough/better...
+        self.vmware_brokers = self.create_property('vmware_brokers', value=None)
 
         # Baseconfig init() will read in default values from read_file_path if it is populated.
         super(Cluster, self).__init__(name=name,
