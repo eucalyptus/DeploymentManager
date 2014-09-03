@@ -146,7 +146,9 @@ class BlockStorage(BaseConfig):
             properties_manager=self.eucalyptus_properties,
             value=None)
 
+
         # Create json configuration (blocks) properties
+        self.cloud_opts = self.create_property(json_name='cloud_opts', value=[])
         self.storage_controllers = self.create_property(json_name='storage_controllers',
                                                         value=[])
 

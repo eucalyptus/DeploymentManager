@@ -26,6 +26,13 @@ class Eucalyptus(BaseConfig):
         :type self.eucalyptus_properties: EucalyptusProperties
         """
         description = description or "Eucalyptus Cloud Global Configuration Block"
+
+        # Create the Eucalyptus software specific properties
+        self.eucalyptus_properties.use_dns_delegation = EucalyptusProperty(
+            name='bootstrap.webservices.use_dns_delegation',
+            properties_manager=self.eucalyptus_properties, value=None)
+
+        # Create json configuration (blocks) properties
         self.log_level = self.create_property(json_name='log-level')
         self.bind_addr = self.create_property('set_bind_addr')
         self.eucalyptus_repo = self.create_property('eucalyptus-repo')
@@ -39,9 +46,8 @@ class Eucalyptus(BaseConfig):
         self.install_load_balancer = self.create_property(
             'install-load-balancer', value=True)
         self.install_imaging_worker = self.create_property('install-imaging-worker', value=True)
-        self.eucalyptus_properties.use_dns_delegation = EucalyptusProperty(
-            name='bootstrap.webservices.use_dns_delegation',
-            properties_manager=self.eucalyptus_properties, value=None)
+        self.cloud_opts = self.create_property(json_name='cloud_opts', value=[])
+
         super(Eucalyptus, self).__init__(name=None,
                                          description=None,
                                          write_file_path=None,

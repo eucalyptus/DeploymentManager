@@ -62,6 +62,7 @@ class Cluster(BaseConfig):
                  property_type=None,
                  version=None):
         description = description or "Eucalyptus Cluster Controller Configuration Block"
+        self._scheduling_options = ['GREEDY', 'ROUNDROBIN']
         # Create the Eucalyptus software specific properties
         self.eucalyptus_properties.addressespernetwork = EucalyptusProperty(
             name=str(name) + '.cluster.addressespernetwork',
@@ -109,6 +110,10 @@ class Cluster(BaseConfig):
             value=None)
 
         # Create storage and cluster controller configuration (blocks) properties
+        self.schedule_policy = self.create_property(json_name='SCHEDPOLICY')
+        self.enable_tunneling  = self.create_property(
+            json_name='DISABLE_TUNNELING',
+            validate_callback=self._validate_reverse_boolean)
 
         # Store the cluster wide block storage (backend) type, and block storage object
         self.blockstorage_type = self.create_property(
@@ -138,6 +143,35 @@ class Cluster(BaseConfig):
                                       write_file_path=write_file_path,
                                       property_type=property_type,
                                       version=version)
+
+    def _validate_reverse_boolean(self, value):
+        '''
+        Method is intended to make some of the more confusing Eucalyptus properties easier for
+        end users to understand by renaming the property and allowing the value(s) to reversed
+        where needed to match the  naming.
+        Validates the value provided is a boolean or None. Returns the reverse of the boolean,
+        or None.
+        '''
+        #Allow disabling the property with None
+        if value is None:
+            return None
+        assert isinstance(value, bool), \
+            'Value must be of type boolean :"{0}"/"{1}"'.format(value, type(value))
+        if value:
+            return False
+        else:
+            return True
+
+    def _validate_scheduler(self, value):
+        if value is None:
+            return None
+        value = str(value).upper()
+        for valid_value in self._scheduling_options:
+            if value == valid_value.upper():
+                return value
+        valid_str = ", ".join(self._scheduling_options)
+        print ('WARNING: Unknown scheduling policy:"{0}". Valid values are:"{1}"'
+               .format(value, valid_str))
 
     def validate_blockstorage_type(self, blockstorage_type):
         try:

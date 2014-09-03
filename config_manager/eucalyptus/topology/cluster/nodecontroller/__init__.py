@@ -25,7 +25,20 @@ class NodeController(BaseConfig):
                  description=None,
                  version=None):
         description = description or "Eucalyptus Node Controller Configuration Block"
+
+        # System properties
         self.hypervisor = self.create_property('hypervisor', value=hypervisor)
+        self.operating_system = self.create_property('operating-system')
+
+        # Node VM/Image related properties
+        self.max_cores = self.create_property('max-cores')
+        self.cache_size = self.create_property('cache-size')
+
+        # Network related
+        self.vnet_private_interface = self.create_property('vnet_privinterface')
+        self.vnet_public_interface = self.create_property('vnet_pubinterface')
+        self.vnet_bridge = self.create_property('vnet_bridge')
+
         # Use validator to make the hypervisor name read-only
         self.hypervisor.validate = lambda x: self.hypervisor.value
         super(NodeController, self).__init__(name=name,
@@ -33,6 +46,5 @@ class NodeController(BaseConfig):
                                              write_file_path=write_file_path,
                                              read_file_path=read_file_path,
                                              version=version)
-        self.max_cores = self.create_property('max-cores')
-        self.cache_size = self.create_property('cache-size')
-        self.operating_system = self.create_property('operating-system')
+
+
