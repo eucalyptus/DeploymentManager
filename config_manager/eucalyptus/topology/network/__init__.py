@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# coding=utf-8
 
 # Copyright 2009-2014 Eucalyptus Systems, Inc.
 #
@@ -18,6 +19,7 @@ import copy
 import re
 import ipaddr
 import socket
+import math
 
 
 class Network(BaseConfig):
@@ -36,40 +38,147 @@ class Network(BaseConfig):
                  network_type=None):
         description = description or "Eucalyptus Network Configuration Block. Network Mode:{0}"\
             .format(self._vnet_mode_string)
-
-        # Network properties...
-        self.network_mode_property = self.create_property('mode', value=self._vnet_mode_string)
-
-        # Public IP network info...
-        self.public_interface_property = self.create_property('public-interface', value=None)
-        self.public_ips_property = self.create_property('public-ips',
-                                               value=[],
-                                               validate_callback=self.validate_publicips)
-
-        # Private IP network info...
         self._subnet_ipaddr_obj = None
         self._gateway_ipaddr_obj = None
 
+        # Network Configuration properties...
+        self.network_mode_property = self.create_property(
+            'mode',
+            value=self._vnet_mode_string,
+            description="The networking mode in which to run. "
+                        "The same mode must be specified on all CCs and NCs in your cloud"
+        )
+        self.public_ips_property = self.create_property(
+            'public-ips',
+            value=[],
+            validate_callback=self._validate_publicips,
+            description="A list of individual and/or hyphenated ranges of public IP \n"
+                        "addresses to assign to instances."
+        )
+        self.addresses_per_network_property = self.create_property(
+            'addresses-per-net',
+            value=None,
+            validate_callback=self._validate_addrs_per_net,
+            description="""
+                        This option controls how many VM instances can simultaneously be part of
+                        an individual user's security group. This option is set to a power
+                        of 2 (8, 16, 32, 64, etc.) but it should never be less than 8 and it
+                        cannot be larger than: (the total number of available IP addresses - 2).
+                        This option is used with VNET_NETMASK to determine how the IP addresses
+                        that are available to VMs are distributed among security groups. VMs
+                        within a single security group can communicate directly. Communication
+                        between VMs within a security group and clients or VMs in other security
+                        groups is controlled by a set of firewall rules. For example, setting
+
+                        VNET_NETMASK="255.255.0.0"
+                        VNET_ADDRESSPERNET="32"
+                        defines a netmask of 255.255.0.0 that uses 16 bits of the IP address
+                        to specify a network number. The remaining 16 bits specify valid IP
+                        addresses for that network meaning that 2^16 = 65536 IP addresses are
+                        assignable on the network. Setting VNET_ADDRESSPERNET="32" tells
+                        Eucalyptus that each security group can have at most
+                        32 VMs in it (each VM getting its own IP address). Further, it stipulates
+                        that at most 2046 security groups can be active at the same time since
+                        65536 / 32 = 2048. Eucalyptus reserves two security groups for its own use.
+
+                        In addition to subnets at Layer 3, Eucalyptus uses VLANs at Layer 2 in
+                        the networking stack to ensure isolation (Managed mode only).
+                        """
+        )
+        self.instance_dns_server_property = self.create_property(
+            'dns-server',
+            value=[],
+            validate_callback=self._validate_ip_entry_strings,
+            description="The addresses of the DNS servers to supply to instances in \n"
+                        "DHCP responses."
+        )
+        self.instance_dns_domain_property = self.create_property(
+            'instance-dns-domain',
+            value=None,
+            description="Internal DNS domain used for instance private DNS names"
+        )
+        self.private_subnets_property = self.create_property(
+            json_name='private-subnets',
+            description="Subnets you want Eucalyptus to route through the private \n"
+                        "network rather than the public"
+        )
+        self.vm_mac_prefix_property = self.create_property(
+            json_name='vnet-macprefix',
+            value=None,
+            description="This option is used to specify a prefix for MAC addresses generated \n"
+                        "by Eucalyptus for VM instances. The prefix has to be in the form HH:HH \n"
+                        "where H is a hexadecimal digit. Example: VNET_MACPREFIX='D0:D0'"
+        )
         self._network_subnet_property = self.create_property(
-            'subnet', value=None, validate_callback=self.validate_ip_entry_strings)
+            'subnet',
+            value=None,
+            validate_callback=self._validate_ip_entry_strings,
+            description="Subnet that will be used for private addressing"
+        )
         self._network_mask_property = self.create_property(
-            'netmask', value=None, validate_callback=self.validate_ip_entry_strings)
+            'netmask',
+            value=None,
+            validate_callback=self._validate_ip_entry_strings,
+            description="The netmask to be used with the private addressing subnet"
+        )
         self._network_gateway_property = self.create_property(
-            'gateway', value=None, validate_callback=self.validate_ip_entry_strings)
+            'gateway',
+            value=None,
+            validate_callback=self._validate_ip_entry_strings,
+            description='Gateway to route packets for private addressing subnet'
+        )
+        self.private_ips_property = self.create_property(
+            'private-ips',
+            value=[],
+            validate_callback=self._validate_privateips,
+            description="Private IPs that will be handed out to instances as they launch"
+        )
+        self.default_dhcp_daemon_property = self.create_property(
+            'dhcp-daemon',
+            value=None,
+            description="The ISC DHCP executable to use.\n"
+                        "This is set to a distro-dependent value by packaging."
+        )
+        self.default_dhcp_user_property = self.create_property(
+            json_name='vnet-dhcpuser',
+            value=None,
+            description="The user the DHCP daemon runs as on your distribution."
+        )
+        self.default_public_interface_property = self.create_property(
+            'default_public-interface',
+            value=None,
+            description="On a CC, this is the name of the network interface that is connected\n"
+                         "to the “public” network. \n"
+                         "On an NC, this is the name of the network\n"
+                         "interface that is connected to the same network as the CC. Depending\n"
+                         "on the hypervisors configuration this may be a bridge or a physical\n"
+                         "interface that is attached to the bridge."
+        )
+        self.default_private_interface_property = self.create_property(
+            'vnet-privinterface',
+            value=None,
+            description="The name of the network interface that is on the same network as \n"
+                        "the NCs. In Managed and Managed (No VLAN) modes this must be a bridge \n"
+                        "for instances in different clusters but in the same security group to \n"
+                        "be able to reach one another with their private addresses."
+        )
+        self.default_node_bridge_interface_property = self.create_property(
+            'vnet_bridge',
+            value=None,
+            description="On an NC, this is the name of the bridge interface to which instances' \n"
+                        "network interfaces should attach. A physical interface that can reach \n"
+                        "the CC must be attached to this bridge. Common setting for KVM is br0."
+        )
+        self.default_l2tp_localip_property = self.create_property(
+            'vnet-localip',
+            value=None,
+            description="By default the CC automatically determines which IP address to use \n"
+                        "when setting up tunnels to other CCs. Set this to the IP address that \n"
+                        "other CCs can use to reach this CC if tunneling does not work."
+        )
 
-        self.private_ips_property = self.create_property('private-ips',
-                                                value=[],
-                                                validate_callback=self.validate_privateips)
-
-        # Machine/component level network info...
-        self.default_private_interface_property = self.create_property('default_private_interface',
-                                                                       value=None)
-        self.default_bridge_interface_property = self.create_property('default_bridge_interface',
-                                                                      value=None)
-        self.default_bridged_nic_property = self.create_property('default_bridged_nic',
-                                                                 value=None)
-
-        self.set_network_properties(subnet, gateway)
+        # Attempt to set properties with any values provided to init...
+        self.configure_network(subnet, gateway)
 
         if private_ips:
             for entry in private_ips.split(','):
@@ -77,7 +186,6 @@ class Network(BaseConfig):
         if public_ips:
             for entry in public_ips.split(','):
                 self.add_public_ip_entry(entry)
-
 
         super(Network, self).__init__(name=name,
                                       description=description,
@@ -88,7 +196,13 @@ class Network(BaseConfig):
 
 
 
-    def set_network_properties(self, subnet, gateway):
+    def configure_network(self, subnet, gateway):
+        """
+        Method to set the local subnet and gateway properties with some checks for
+        misconfiguration, conflicting, entries, etc..
+        :param subnet: string ip subnet in cidr format. (ie: x.x.x.x/x )
+        :param gateway: string ip gateway (ie: x.x.x.x )
+        """
         orig_subnet = str(self._subnet_ipaddr_obj)
         self.set_subnet(subnet)
         try:
@@ -103,6 +217,11 @@ class Network(BaseConfig):
         return self._subnet_ipaddr_obj
 
     def set_subnet(self, value):
+        """
+        Method to set the current subnet property. Will validate the subnet against existing
+        entries and potential address conflicts, etc..
+        :param value: string ip subnet in cidr format. (ie: x.x.x.x/x )
+        """
         print 'Setting subnet to value:' + str(value)
         if value is None:
             if self.public_ips_property.value or self.private_ips_property.value:
@@ -123,13 +242,13 @@ class Network(BaseConfig):
             # Check existing private ip list for conflicts
             for entry in self.private_ips_property.value:
                 if not self._is_ip_entry_in_subnet(entry, subnet=subnet):
-                    raise ValueError('Existing IP entry:"{0}" is not within new subnet:"{1}"'
-                                     .format(entry, subnet))
-                self.check_ip_entry_for_subnet_conflicts(entry, subnet=subnet)
+                    raise ValueError('Existing IP entry:"{0}" is not within new subnet:"{1}". '
+                                     'Remove before changing subnet'.format(entry, subnet))
+                self._check_ip_entry_for_subnet_conflicts(entry, subnet=subnet)
 
             # Check existing public ip list for conflicts
             for entry in self.public_ips_property.value:
-                self.check_ip_entry_for_subnet_conflicts(entry, subnet=subnet)
+                self._check_ip_entry_for_subnet_conflicts(entry, subnet=subnet)
 
             # Store current values in case of rollback
             network_orig = self._subnet_ipaddr_obj
@@ -152,6 +271,11 @@ class Network(BaseConfig):
 
 
     def set_gateway(self, value):
+        """
+        Sets gateway ipaddr obj and json property value. Does basic checks against the gateway
+        'value' provided for potential conflicts, etc..
+        :param value: string, gateway ip (ie: x.x.x.x)
+        """
         print 'Setting Gateway to:' + str(value)
         if value is None:
             self._gateway_ipaddr_obj = None
@@ -159,21 +283,29 @@ class Network(BaseConfig):
         else:
             if self.subnet is None:
                 raise ValueError('Must set subnet before setting gateway')
-            self.validate_ip_string(value)
+            self._validate_ip_string(value)
             ip = ipaddr.IPv4Address(value)
             if not self._subnet_ipaddr_obj.Contains(ip):
                 raise ValueError('Gateway:"{0}" not in current subnet value:"{1}"'
                                  .format(value, self.subnet))
+            self._check_ip_entry_for_subnet_conflicts(str(ip))
             self._gateway_ipaddr_obj = ip
             self._network_gateway_property.value = str(ip)
 
-    def validate_privateips(self, privateips):
-        return self.validate_ip_entry_strings(privateips)
+    def _validate_addrs_per_net(self, value):
+        if value and not math.log(int(value),2)%1:
+            return value
+        else:
+            return None
 
-    def validate_publicips(self, publicips):
-        return self.validate_ip_entry_strings(publicips)
 
-    def validate_ip_entry_strings(self, iplist):
+    def _validate_privateips(self, privateips):
+        return self._validate_ip_entry_strings(privateips)
+
+    def _validate_publicips(self, publicips):
+        return self._validate_ip_entry_strings(publicips)
+
+    def _validate_ip_entry_strings(self, iplist):
         if iplist is None or iplist == []:
             return iplist
         if not isinstance(iplist, list):
@@ -184,13 +316,13 @@ class Network(BaseConfig):
             ips = str(item).split('-')
             # Validate any ips passed
             for ip in ips:
-                self.validate_ip_string(ip)
+                self._validate_ip_string(ip)
         return iplist
 
-    def validate_ip_string(self, ip):
+    def _validate_ip_string(self, ip):
         try:
             socket.inet_aton(ip)
-        except socket.error:
+        except TypeError, socket.error:
             raise ValueError('Invalid IP address: "{0}"'.format(ip))
 
     def _sort_ip_list(self, iplist):
@@ -216,6 +348,8 @@ class Network(BaseConfig):
                              .format(public_ip_entry))
         ip_entry_list = str(public_ip_entry).split(',')
         for ip_entry in ip_entry_list:
+            # Check if the entry conflicts with the network, broadcast or gateway addrs
+            self._check_ip_entry_for_subnet_conflicts(ip_entry)
             # Check for conflicts in both the existing ip entries as well as the current...
             templist = copy.copy(ip_entry_list)
             templist.remove(ip_entry)
@@ -247,7 +381,7 @@ class Network(BaseConfig):
                 raise ValueError('IP Entry:"{0}" is not in configured subnet:"{1}"'
                                  .format(ip_entry, self.subnet))
             # Check if the entry conflicts with the network, broadcast or gateway addrs
-            self.check_ip_entry_for_subnet_conflicts(ip_entry)
+            self._check_ip_entry_for_subnet_conflicts(ip_entry)
             # Check for conflicts in both the existing ip entries as well as the current...
             templist = copy.copy(ip_entry_list)
             templist.remove(ip_entry)
@@ -265,7 +399,7 @@ class Network(BaseConfig):
             raise TypeError('subnet must be of type ipaddr.IPv4Network. type:"{0}", subnet:"{1}"'
                             .format(type(subnet), subnet))
         for ip in str(ip_entry).split('-'):
-            self.validate_ip_string(ip)
+            self._validate_ip_string(ip)
             if not subnet.Contains(ipaddr.IPv4Address(ip)):
                 return False
         return True
@@ -299,7 +433,7 @@ class Network(BaseConfig):
         :raises: ValueError
         '''
         newips = str(ip_entry).split('-')
-        self.validate_ip_entry_strings(newips)
+        self._validate_ip_entry_strings(newips)
 
         # Check individual ips for conflicts with existing ips/ranges...
         if existing_list:
@@ -328,7 +462,7 @@ class Network(BaseConfig):
                         return existing_entry
         return None
 
-    def check_ip_entry_for_subnet_conflicts(self, ip_entry, subnet=None, gateway=None):
+    def _check_ip_entry_for_subnet_conflicts(self, ip_entry, subnet=None, gateway=None):
         """
         Checks an ip entry which is a string representing a single ip "x.x.x.x" or a
         range of ips "x.x.x.x-y.y.y.y" against the subnet's network, broadcast and gateway
@@ -341,7 +475,7 @@ class Network(BaseConfig):
         gateway = gateway or self.gateway
          # Check individual ips for conflicts with the subnet addrs...
         newips = str(ip_entry).split('-')
-        self.validate_ip_entry_strings(newips)
+        self._validate_ip_entry_strings(newips)
         if subnet or gateway:
             for ip in newips:
                 if subnet:
@@ -366,7 +500,7 @@ class Network(BaseConfig):
         :param range_end: string ip (x.x.x.x), end of ip range
         :returns: boolean
         """
-        self.validate_ip_entry_strings([ip, range_start, range_end])
+        self._validate_ip_entry_strings([ip, range_start, range_end])
         check_ip = ipaddr.IPv4Address(ip)
         range_start = ipaddr.IPv4Address(range_start)
         range_end = ipaddr.IPv4Address(range_end)
@@ -397,7 +531,7 @@ class Network(BaseConfig):
         :returns: list of ips containing the range of the ip entry. ie: [start, end]
         """
         print 'getting ip_entry_range for entry:' + str(entry)
-        self.validate_ip_entry_strings(entry)
+        self._validate_ip_entry_strings(entry)
         iprange =[]
         splitentry = entry.split('-')
         iprange.append(splitentry[0])
@@ -406,3 +540,21 @@ class Network(BaseConfig):
         else:
             iprange.append(splitentry[1])
         return iprange
+
+    def _validate_reverse_boolean(self, value):
+        '''
+        Method is intended to make some of the more confusing Eucalyptus properties easier for
+        end users to understand by renaming the property and allowing the value(s) to reversed
+        where needed to match the  naming.
+        Validates the value provided is a boolean or None. Returns the reverse of the boolean,
+        or None.
+        '''
+        #Allow disabling the property with None
+        if value is None:
+            return None
+        assert isinstance(value, bool), \
+            'Value must be of type boolean :"{0}"/"{1}"'.format(value, type(value))
+        if value:
+            return False
+        else:
+            return True
