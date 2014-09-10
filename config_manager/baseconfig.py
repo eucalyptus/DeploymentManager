@@ -34,6 +34,7 @@ class ConfigProperty(object):
                  type=None,
                  validate_callback=None,
                  reset_callback=None,
+                 description="",
                  default_value=config_manager.DEFAULT_NOT_DEFINED):
         assert isinstance(configmanager, BaseConfig)
         self.configmanager = configmanager
@@ -45,8 +46,11 @@ class ConfigProperty(object):
         # self.set(value)
         self.value = value
         self.default_value = default_value
-        self.__doc__ = "Mapping to allow json property: {0} manipulation" \
-            .format(json_name)
+        self.description = description
+        if self.description:
+            description = "\n" + self.description
+        self.__doc__ = 'Mapping to store and validate json property: "{0}". \n{1}' \
+            .format(json_name, description)
 
     @property
     def value(self):
@@ -156,13 +160,14 @@ class BaseConfig(object):
             self.__dict__[key] = value
 
     def create_property(self, json_name, value=None, validate_callback=None,
-                        reset_callback=None, default_value=None):
+                        reset_callback=None, default_value=None, description=None):
         return ConfigProperty(json_name=json_name,
                               configmanager=self,
                               value=value,
                               validate_callback=validate_callback,
                               reset_callback=reset_callback,
-                              default_value=default_value)
+                              default_value=default_value,
+                              description=description)
 
     def _get_json_property(self, property_name):
         """
@@ -295,6 +300,13 @@ class BaseConfig(object):
         the json configuration to another process, etc..
         """
         pass
+
+    def diff_baseconfig(self, baseconfig_obj):
+        assert isinstance(baseconfig_obj, BaseConfig), 'diff_baseconfig requires BaseConfig() obj'
+        text1 = self.to_json().splitlines()
+        text2 = baseconfig_obj.to_json().splitlines()
+        diff = difflib.unified_diff(text1, text2, lineterm='')
+        return str('\n'.join(diff))
 
     def diff(self, file_path):
         """

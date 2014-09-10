@@ -109,6 +109,24 @@ class Cluster(BaseConfig):
             properties_manager=self.eucalyptus_properties,
             value=None)
 
+        self.nc_communication_port = self.create_property(
+            json_name='nc_port',
+            value = None,
+            description="On a NC, this defines the TCP port on which the NC will listen. \n"
+                        "On a CC, this defines the TCP port on which the CC will contact NCs."
+        )
+        self.cc_communication_port = self.create_property(
+            json_name='cc_port',
+            value=None,
+            description=" The TCP port on which the CC will listen"
+        )
+        self.vm_placemenscheduling_policy = self.create_property(
+            json_name='schedule_policy',
+            description="""The scheduling policy that the CC uses to choose the NC on which to
+                           run each new instance.  Valid settings include GREEDY and ROUNDROBIN.
+                           The default scheduling policy is ROUNDROBIN
+                        """
+        )
         # Create storage and cluster controller configuration (blocks) properties
         self.schedule_policy = self.create_property(json_name='SCHEDPOLICY')
         self.enable_tunneling  = self.create_property(

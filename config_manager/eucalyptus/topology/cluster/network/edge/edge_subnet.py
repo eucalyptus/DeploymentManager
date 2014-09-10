@@ -16,19 +16,17 @@
 # limitations under the License.
 from config_manager.baseconfig import BaseConfig
 import copy
-import re
 import ipaddr
 import socket
 import math
 
 
-class Network(BaseConfig):
-    _vnet_mode_string = None
+class Edge_Subnet(BaseConfig):
+    _network_mode_string = 'EDGE'
     def __init__(self,
                  subnet,
-                 gateway,
+                 gateway=None,
                  public_ips=None,
-                 private_ips=None,
                  name=None,
                  description=None,
                  read_file_path=None,
@@ -36,165 +34,81 @@ class Network(BaseConfig):
                  property_type=None,
                  version=None,
                  network_type=None):
-        description = description or "Eucalyptus Network Configuration Block. Network Mode:{0}"\
-            .format(self._vnet_mode_string)
+        description = description or "Eucalyptus Edge Subnet Configuration Block."
+        name = name or str(subnet)
         self._subnet_ipaddr_obj = None
         self._gateway_ipaddr_obj = None
 
-        # Network Configuration properties...
-        self.network_mode_property = self.create_property(
-            'mode',
-            value=self._vnet_mode_string,
-            description="The networking mode in which to run. "
-                        "The same mode must be specified on all CCs and NCs in your cloud"
-        )
         self.public_ips_property = self.create_property(
             'public-ips',
             value=[],
             validate_callback=self._validate_publicips,
-            description="A list of individual and/or hyphenated ranges of public IP \n"
+            description="Modes: MANAGED, MANAGED-NOVLAN\n"
+                        "A list of individual and/or hyphenated ranges of public IP \n"
                         "addresses to assign to instances."
-        )
-        self.addresses_per_network_property = self.create_property(
-            'addresses-per-net',
-            value=None,
-            validate_callback=self._validate_addrs_per_net,
-            description="""
-                        This option controls how many VM instances can simultaneously be part of
-                        an individual user's security group. This option is set to a power
-                        of 2 (8, 16, 32, 64, etc.) but it should never be less than 8 and it
-                        cannot be larger than: (the total number of available IP addresses - 2).
-                        This option is used with VNET_NETMASK to determine how the IP addresses
-                        that are available to VMs are distributed among security groups. VMs
-                        within a single security group can communicate directly. Communication
-                        between VMs within a security group and clients or VMs in other security
-                        groups is controlled by a set of firewall rules. For example, setting
-
-                        VNET_NETMASK="255.255.0.0"
-                        VNET_ADDRESSPERNET="32"
-                        defines a netmask of 255.255.0.0 that uses 16 bits of the IP address
-                        to specify a network number. The remaining 16 bits specify valid IP
-                        addresses for that network meaning that 2^16 = 65536 IP addresses are
-                        assignable on the network. Setting VNET_ADDRESSPERNET="32" tells
-                        Eucalyptus that each security group can have at most
-                        32 VMs in it (each VM getting its own IP address). Further, it stipulates
-                        that at most 2046 security groups can be active at the same time since
-                        65536 / 32 = 2048. Eucalyptus reserves two security groups for its own use.
-
-                        In addition to subnets at Layer 3, Eucalyptus uses VLANs at Layer 2 in
-                        the networking stack to ensure isolation (Managed mode only).
-                        """
         )
         self.instance_dns_server_property = self.create_property(
             'dns-server',
             value=[],
             validate_callback=self._validate_ip_entry_strings,
-            description="The addresses of the DNS servers to supply to instances in \n"
+            description="Modes: MANAGED, MANAGED-NOVLAN, EDGE"
+                        "The addresses of the DNS servers to supply to instances in \n"
                         "DHCP responses."
         )
         self.instance_dns_domain_property = self.create_property(
             'instance-dns-domain',
             value=None,
-            description="Internal DNS domain used for instance private DNS names"
+            description="Modes: EDGE"
+                        "Internal DNS domain used for instance private DNS names"
         )
         self.private_subnets_property = self.create_property(
             json_name='private-subnets',
-            description="Subnets you want Eucalyptus to route through the private \n"
+            description="Modes: EDGE"
+                        "Subnets you want Eucalyptus to route through the private \n"
                         "network rather than the public"
-        )
-        self.vm_mac_prefix_property = self.create_property(
-            json_name='vnet-macprefix',
-            value=None,
-            description="This option is used to specify a prefix for MAC addresses generated \n"
-                        "by Eucalyptus for VM instances. The prefix has to be in the form HH:HH \n"
-                        "where H is a hexadecimal digit. Example: VNET_MACPREFIX='D0:D0'"
         )
         self._network_subnet_property = self.create_property(
             'subnet',
             value=None,
             validate_callback=self._validate_ip_entry_strings,
-            description="Subnet that will be used for private addressing"
+            description="Modes: MANAGED, MANAGED-NOVLAN, EDGE"
+                        "Subnet that will be used for private addressing"
         )
         self._network_mask_property = self.create_property(
             'netmask',
             value=None,
             validate_callback=self._validate_ip_entry_strings,
-            description="The netmask to be used with the private addressing subnet"
+            description="Modes: MANAGED, MANAGED-NOVLAN, EDGE"
+                        "The netmask to be used with the private addressing subnet"
         )
         self._network_gateway_property = self.create_property(
             'gateway',
             value=None,
             validate_callback=self._validate_ip_entry_strings,
-            description='Gateway to route packets for private addressing subnet'
+            description='Modes: EDGE'
+                        'Gateway to route packets for private addressing subnet'
         )
         self.private_ips_property = self.create_property(
             'private-ips',
             value=[],
             validate_callback=self._validate_privateips,
-            description="Private IPs that will be handed out to instances as they launch"
-        )
-        self.default_dhcp_daemon_property = self.create_property(
-            'dhcp-daemon',
-            value=None,
-            description="The ISC DHCP executable to use.\n"
-                        "This is set to a distro-dependent value by packaging."
-        )
-        self.default_dhcp_user_property = self.create_property(
-            json_name='vnet-dhcpuser',
-            value=None,
-            description="The user the DHCP daemon runs as on your distribution."
-        )
-        self.default_public_interface_property = self.create_property(
-            'default_public-interface',
-            value=None,
-            description="On a CC, this is the name of the network interface that is connected\n"
-                         "to the “public” network. \n"
-                         "On an NC, this is the name of the network\n"
-                         "interface that is connected to the same network as the CC. Depending\n"
-                         "on the hypervisors configuration this may be a bridge or a physical\n"
-                         "interface that is attached to the bridge."
-        )
-        self.default_private_interface_property = self.create_property(
-            'vnet-privinterface',
-            value=None,
-            description="The name of the network interface that is on the same network as \n"
-                        "the NCs. In Managed and Managed (No VLAN) modes this must be a bridge \n"
-                        "for instances in different clusters but in the same security group to \n"
-                        "be able to reach one another with their private addresses."
-        )
-        self.default_node_bridge_interface_property = self.create_property(
-            'vnet_bridge',
-            value=None,
-            description="On an NC, this is the name of the bridge interface to which instances' \n"
-                        "network interfaces should attach. A physical interface that can reach \n"
-                        "the CC must be attached to this bridge. Common setting for KVM is br0."
-        )
-        self.default_l2tp_localip_property = self.create_property(
-            'vnet-localip',
-            value=None,
-            description="By default the CC automatically determines which IP address to use \n"
-                        "when setting up tunnels to other CCs. Set this to the IP address that \n"
-                        "other CCs can use to reach this CC if tunneling does not work."
+            description="Modes: EDGE"
+                        "Private IPs that will be handed out to instances as they launch"
         )
 
         # Attempt to set properties with any values provided to init...
         self.configure_network(subnet, gateway)
 
-        if private_ips:
-            for entry in private_ips.split(','):
-                self.add_private_ip_entry(entry)
         if public_ips:
             for entry in public_ips.split(','):
                 self.add_public_ip_entry(entry)
 
-        super(Network, self).__init__(name=name,
-                                      description=description,
-                                      read_file_path=read_file_path,
-                                      write_file_path=write_file_path,
-                                      property_type=property_type,
-                                      version=version)
-
-
+        super(Edge_Subnet, self).__init__(name=name,
+                                     description=description,
+                                     read_file_path=read_file_path,
+                                     write_file_path=write_file_path,
+                                     property_type=property_type,
+                                     version=version)
 
     def configure_network(self, subnet, gateway):
         """
@@ -269,7 +183,6 @@ class Network(BaseConfig):
     def gateway(self):
         return self._gateway_ipaddr_obj
 
-
     def set_gateway(self, value):
         """
         Sets gateway ipaddr obj and json property value. Does basic checks against the gateway
@@ -292,12 +205,11 @@ class Network(BaseConfig):
             self._gateway_ipaddr_obj = ip
             self._network_gateway_property.value = str(ip)
 
-    def _validate_addrs_per_net(self, value):
+    def _validate_addrs_per_security_group_property(self, value):
         if value and not math.log(int(value),2)%1:
             return value
         else:
             return None
-
 
     def _validate_privateips(self, privateips):
         return self._validate_ip_entry_strings(privateips)
@@ -327,8 +239,7 @@ class Network(BaseConfig):
 
     def _sort_ip_list(self, iplist):
         items = sorted(iplist.items(), key=lambda item: socket.inet_aton(item[0]))
-
-
+        return items
 
     def is_address_in_network(cls, ip_addr, network):
         """
@@ -339,7 +250,6 @@ class Network(BaseConfig):
         ip = ipaddr.IPv4Address(ipaddr)
         ip_net = ipaddr.IPv4Network(network)
         return ip_net.Contains(ip)
-
 
     def add_public_ip_entry(self, public_ip_entry):
         new_list = []
@@ -366,7 +276,6 @@ class Network(BaseConfig):
                 self.public_ips_property.value.sort()
                 return delentry
 
-
     def add_private_ip_entry(self, private_ip_entry):
         new_list = []
         if not self.subnet:
@@ -391,7 +300,6 @@ class Network(BaseConfig):
             new_list.append(ip_entry)
         self.private_ips_property.value.extend(new_list)
         self.private_ips_property.value.sort()
-
 
     def _is_ip_entry_in_subnet(self, ip_entry, subnet=None):
         subnet = subnet or self.subnet
@@ -490,7 +398,6 @@ class Network(BaseConfig):
                     raise ValueError('Error. IP entry:"{0}" conflicts with gateway:"{1}"'
                                      .format(ip_entry, gateway))
 
-
     def _is_ip_in_range(self, ip, range_start, range_end):
         """
         If 'ip' is in the range 'range_start' to 'range_end' this
@@ -558,3 +465,5 @@ class Network(BaseConfig):
             return False
         else:
             return True
+
+
