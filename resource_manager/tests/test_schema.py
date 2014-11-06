@@ -15,6 +15,7 @@ def test_machine_keys():
     assert 'owner' in schema
     assert 'state' in schema
     assert 'job_id' in schema
+    assert 'tags' in schema
 
 
 def test_machine_required():
@@ -37,6 +38,7 @@ def test_address_keys():
     schema = ResourceSchema().address_schema
     assert 'address' in schema
     assert 'owner' in schema
+    assert 'tags' in schema
 
 
 def test_address_required():

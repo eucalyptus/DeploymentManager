@@ -17,9 +17,9 @@ class RequestFailureException(Exception):
 
 
 class ResourceManagerClient(object):
-    FIELDS = {'machines': ["hostname", "owner", "state", "job_id", "_updated", "_id"],
-              'private-addresses': ["address", "owner", "_updated", "_id"],
-              'public-addresses': ["address",  "owner", "_updated", "_id"]}
+    FIELDS = {'machines': ["hostname", "owner", "state", "job_id", "tags", "_updated", "_id"],
+              'private-addresses': ["address", "owner", "tags", "_updated", "_id"],
+              'public-addresses': ["address",  "owner", "tags", "_updated", "_id"]}
 
     def __init__(self, resource_type='machines', endpoint='http://127.0.0.1:5000', username='admin', password='admin'):
         self.endpoint = endpoint + '/' + resource_type
