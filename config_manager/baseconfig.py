@@ -21,10 +21,11 @@ from pprint import pformat
 from shutil import copyfile
 import difflib
 import config_manager
+from eucalyptus_properties import EucalyptusProperties, EucalyptusProperty
+import config_manager
 
 
 class ConfigProperty(object):
-    DEFAULT_NOT_DEFINED = "DEFAULT NOT DEFINED"
 
     def __init__(self,
                  json_name,
@@ -33,7 +34,7 @@ class ConfigProperty(object):
                  type=None,
                  validate_callback=None,
                  reset_callback=None,
-                 default_value=DEFAULT_NOT_DEFINED):
+                 default_value=config_manager.DEFAULT_NOT_DEFINED):
         assert isinstance(configmanager, BaseConfig)
         self.configmanager = configmanager
         self.name = json_name
@@ -116,10 +117,8 @@ class BaseConfig(object):
         """
         # Set name and config file path first to allow updating base values
         # from an existing file
-        self._json_properties = {}
-        # Set name and config file path first to allow updating base values
-        # from an existing file
-        property_type = property_type or self.__class__.__name__.lower()
+
+        property_type = property_type or self.__class__.__name__
         version = version or config_manager.__version__
         # Now overwrite with any params provided
         self.name = self.create_property('name', name)
@@ -130,15 +129,29 @@ class BaseConfig(object):
 
         self.read_file_path = read_file_path
         self.write_file_path = write_file_path
-        self.update_from_file()
-        self.default_attributes = {}
+        if self.read_file_path:
+            self.update_from_file()
+
+    @property
+    def eucalyptus_properties(self):
+        if not hasattr(self, '_eucalyptus_properties'):
+            self._eucalyptus_properties = EucalyptusProperties()
+        assert isinstance(self._eucalyptus_properties, EucalyptusProperties)
+        return self._eucalyptus_properties
+
+    @property
+    def json_properties(self):
+        if not hasattr(self, '_json_properties'):
+            self._json_properties = {}
+        return self._json_properties
 
     def __setattr__(self, key, value, force=False):
         attr = getattr(self, key, None)
-        if attr and isinstance(attr, ConfigProperty) and not force:
+        if attr and (isinstance(attr, ConfigProperty) or isinstance(attr, EucalyptusProperty)) \
+                and not force:
             raise AttributeError('ConfigProperty types are ready-only, '
-                                 'did you mean to set {0}.value?'
-                                 .format(key))
+                                 'did you mean: "{0}.value={1}"?'
+                                 .format(key, value))
         else:
             self.__dict__[key] = value
 
@@ -155,20 +168,20 @@ class BaseConfig(object):
         """
         helper method for mapping json to python properties
         """
-        return self._json_properties[property_name]
+        return self.json_properties[property_name]
 
     def _set_json_property(self, property_name, value):
         """
         helper method for mapping json to python properties
         """
-        self._json_properties[property_name] = value
+        self.json_properties[property_name] = value
 
     def _del_json_property(self, property_name):
         """
         helper method for mapping json to python properties
         """
-        if property_name in self._json_properties:
-            self._json_properties.pop(property_name)
+        if property_name in self.json_properties:
+            self.json_properties.pop(property_name)
 
     def __repr__(self):
         """
@@ -177,20 +190,12 @@ class BaseConfig(object):
         """
         return self.to_json(show_all=True)
 
-    def del_prop(self, property_name):
-        prop = getattr(self, property_name, None)
-        if not hasattr(prop, 'fdel'):
-            raise ValueError('{0} is not a property of this object'
-                             .format(property_name))
-        if prop:
-            prop.fdel(self)
-            self.__delattr__(property_name)
-
     def get_attr_by_json_name(self, json_name):
         for key in self._get_keys():
             attr = getattr(self, key)
-            if hasattr(attr, 'fget') and attr.fget() == json_name:
-                return attr
+            if isinstance(attr, ConfigProperty):
+                if attr.name == json_name:
+                    return attr
         return None
 
     # todo define how validation methods for each config subclass should be used
@@ -270,7 +275,7 @@ class BaseConfig(object):
         if newdict:
             for key in newdict:
                 value = newdict[key]
-                if key not in self._json_properties:
+                if key not in self.json_properties:
                     print ('warning "{0}" not found in json properties for '
                            'class: "{1}"'.format(key, self.__class__))
                 else:
@@ -279,7 +284,7 @@ class BaseConfig(object):
                         print 'warning local attribute with json_name "{0}" ' \
                               'not found'.format(key)
                     else:
-                        attr.fset(value)
+                        attr.value = value
 
     # todo define how/if this method should be used, examples, etc..
     def send(self, filehandle=None):
@@ -345,20 +350,16 @@ class BaseConfig(object):
             save_file.write(config_json)
             save_file.flush()
 
-    def add_config(self, service_config):
-        self.default_attributes.update(
-            {service_config.__class__.__name__.lower(): service_config}
-        )
-
-    def to_dict(self):
-        return dict(name=self.name,
-                    description=self.description,
-                    default_attributes=self.default_attributes)
-
-
-class DMJSONEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if hasattr(obj, 'to_dict'):
-            return obj.to_dict()
-        else:
-            return json.JSONEncoder.default(self, obj)
+    def _aggregate_eucalyptus_properties(self, show_all=False):
+        """
+        Gathers all the eucalyptus software specific properties for child
+        baseconfig object
+        :returns dict
+        """
+        property_dict = self.eucalyptus_properties.get_eucalyptus_property_dict(show_all=show_all)
+        for key in self._get_keys():
+            attr = self.__getattribute__(key)
+            if isinstance(attr, ConfigProperty) and \
+                    isinstance(attr.value, BaseConfig):
+                property_dict.update(attr.value._aggregate_eucalyptus_properties(show_all=show_all))
+        return property_dict

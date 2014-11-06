@@ -1,7 +1,7 @@
 RESOURCE_METHODS = ['GET', 'POST', 'DELETE']
 ITEM_METHODS = ['GET', 'PATCH', 'PUT', 'DELETE']
 PAGINATION = False
-lookup_url = 'regex("[\w-]+")'
+lookup_url = 'regex("[\.\w-]+")'
 
 
 class ResourceSchema(object):
@@ -10,7 +10,6 @@ class ResourceSchema(object):
             'type': 'string',
             'required': True,
             'unique': True
-
         },
         'owner': {
             'type': 'string'
@@ -32,7 +31,7 @@ class ResourceSchema(object):
         'address': {
             'type': 'string',
             'required': True,
-            'unique': True,
+            'unique': True
         },
         'owner': {
             'type': 'string'
