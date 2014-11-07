@@ -22,7 +22,7 @@ class ResourceSchema(object):
         'job_id': {
             'type': 'string'
         },
-        'tags':{
+        'tags': {
             'type': 'dict'
         }
     }
@@ -36,7 +36,7 @@ class ResourceSchema(object):
         'owner': {
             'type': 'string'
         },
-        'tags':{
+        'tags': {
             'type': 'dict'
         }
     }
