@@ -68,22 +68,24 @@ class PxeManager(object):
         self.public_ip_reservation = []
         self.private_ip_reservation = []
 
-    def make_host_reservation(self, owner, count, job_id, distro):
+    def make_host_reservation(self, owner, count, job_id, distro, tags=None):
         """
         Get machines from machine pool
+        :param tags: Dict of tags that you want to use to filter resources
         :param owner: who the reservation is for
         :param count: how many machines to reserve
         :param job_id: unique identifier for the reservation
         :param distro: what OS to install (see the global dict "distro" for valid options)
         :return:
         """
-        resources = self.host_manager.find_resources(field="state", value="idle")['_items']
-        if len(resources) < count:
+        available_machines = self.host_manager.find_resources(field="state", value="idle")['_items']
+        filtered_machines = self.filter_resources_by_tags(available_machines, tags)
+        if len(filtered_machines) < count:
             print "Oops...There are not enough free resources to fill your request."
             return
 
         for i in range(count):
-            hostname = resources[i]['hostname']
+            hostname = filtered_machines[i]['hostname']
             data = json.dumps({'hostname': hostname, 'owner': owner, 'state': 'pxe', 'job_id': job_id})
             self.host_manager.update_resource(data)
             self.put_file_on_target(ip=self.cobbler.get_system(hostname)['interfaces']['eth0']['ip_address'],
@@ -236,7 +238,7 @@ class PxeManager(object):
             reservation_ips.append(self.cobbler.get_system(item)['interfaces']['eth0']['ip_address'])
         return reservation_ips
 
-    def make_ip_reservation(self, ip_type, job_id, number_of_ips):
+    def make_ip_reservation(self, ip_type, job_id, number_of_ips, tags=None):
         """
         Used to make a reservation of public or private IPs.  Typically the job_id would be the jenkins job or some
         other string that would be unique to the entire reservation. This makes it easier to free the IPs associated
@@ -245,6 +247,7 @@ class PxeManager(object):
         *Use caution when using a user's name when freeing as that would free all for that person. If a user name is
         used for the reservation it is best practice to free those by IP address
 
+        :param tags: Dict of tags that you want to use to filter resources
         :param ip_type: Type of IP reservation to make (public/private)
         :param job_id: job_id or owner to make the reservation for
         :param number_of_ips: how many IPs to reserve
@@ -255,13 +258,14 @@ class PxeManager(object):
         reservation_dict = {'public': self.public_ip_reservation,
                             'private': self.private_ip_reservation}
         ip_manager = type_dict[ip_type]
-        resources = ip_manager.find_resources(field="owner", value="")['_items']
-        if len(resources) < number_of_ips:
+        free_addresses = ip_manager.find_resources(field="owner", value="")['_items']
+        filtered_addresses = self.filter_resources_by_tags(free_addresses, tags)
+        if len(filtered_addresses) < number_of_ips:
             print "Oops...There are not enough free IPs to fill your request."
             return
 
         for i in range(number_of_ips):
-            address = resources[i]['address']
+            address = filtered_addresses[i]['address']
             data = json.dumps({'address': address, 'owner': job_id})
             ip_manager.update_resource(data)
             reservation_dict[ip_type].append(address)
@@ -291,3 +295,28 @@ class PxeManager(object):
             data = json.dumps({'address': address, 'owner': ''})
             ip_type.update_resource(data)
         return
+
+    def filter_resources_by_tags(self, resources, tags):
+        """
+        Filter a list of resources down to the ones that have the tags passed in
+
+        :param resources: List of resources
+        :param tags: Dict of tags to match
+        :return: Filtered list of resources
+        """
+        if not tags:
+            return resources
+        matching_resources = []
+        ### For each resource
+        for resource in resources:
+            ### Check that each tag is available, if so add it to the returned array
+            all_tags_valid = True
+            for tag in tags.keys():
+                if tag not in resource['tags'] or resource['tags'][tag] != tags[tag]:
+                    all_tags_valid = False
+            if all_tags_valid:
+                matching_resources.append(resource)
+        return matching_resources
+
+
+
