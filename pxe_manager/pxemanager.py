@@ -307,9 +307,9 @@ class PxeManager(object):
         if not tags:
             return resources
         matching_resources = []
-        ### For each resource
+        # For each resource
         for resource in resources:
-            ### Check that each tag is available, if so add it to the returned array
+            # Check that each tag is available, if so add it to the returned array
             all_tags_valid = True
             for tag in tags.keys():
                 if tag not in resource['tags'] or resource['tags'][tag] != tags[tag]:
@@ -317,6 +317,3 @@ class PxeManager(object):
             if all_tags_valid:
                 matching_resources.append(resource)
         return matching_resources
-
-
-
