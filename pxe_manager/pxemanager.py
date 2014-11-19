@@ -37,8 +37,10 @@ import json
 from time import sleep
 from paramiko import BadHostKeyException, AuthenticationException, SSHException, SSHClient, AutoAddPolicy
 
+
 class UnableToFullfillRequestException(Exception):
     pass
+
 
 class PxeManager(object):
     def __init__(self, cobbler_url, cobbler_user, cobbler_password, host_manager_client, public_ip_manager_client,
