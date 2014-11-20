@@ -38,6 +38,10 @@ from time import sleep
 from paramiko import BadHostKeyException, AuthenticationException, SSHException, SSHClient, AutoAddPolicy
 
 
+class UnableToFullfillRequestException(Exception):
+    pass
+
+
 class PxeManager(object):
     def __init__(self, cobbler_url, cobbler_user, cobbler_password, host_manager_client, public_ip_manager_client,
                  private_ip_manager_client, ssh_user="root", ssh_password="foobar"):
@@ -82,7 +86,7 @@ class PxeManager(object):
         filtered_machines = self.filter_resources_by_tags(available_machines, tags)
         if len(filtered_machines) < count:
             print "Oops...There are not enough free resources to fill your request."
-            return
+            raise UnableToFullfillRequestException()
 
         for i in range(count):
             hostname = filtered_machines[i]['hostname']
@@ -262,7 +266,7 @@ class PxeManager(object):
         filtered_addresses = self.filter_resources_by_tags(free_addresses, tags)
         if len(filtered_addresses) < number_of_ips:
             print "Oops...There are not enough free IPs to fill your request."
-            return
+            raise UnableToFullfillRequestException()
 
         for i in range(number_of_ips):
             address = filtered_addresses[i]['address']
