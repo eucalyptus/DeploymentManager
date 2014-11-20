@@ -14,7 +14,7 @@ def test_defaults(resource='machines'):
     assert client.resource_type == resource
     defaults = dict(endpoint='http://127.0.0.1:5000/machines', resource_type='machines', key='hostname',
                     auth=('admin', 'admin'), headers={'content-type': 'application/json'},
-                    fields=["hostname", "owner", "state", "job_id", "_updated", "_id"])
+                    fields=["hostname", "owner", "state", "job_id", "tags", "_updated", "_id"])
     for attribute, value in defaults.iteritems():
         try:
             assert value == client.__getattribute__(attribute)

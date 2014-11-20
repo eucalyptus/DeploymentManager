@@ -17,7 +17,7 @@ eucalyptus.set_log_level('INFO')
 eucalyptus.set_bind_addr_value(True)
 topo = Topology()
 eucalyptus.add_topology(topo)
-#cluster = topo.create_cluster('CLUSTER1', hypervisor='kvm')
+# cluster = topo.create_cluster('CLUSTER1', hypervisor='kvm')
 # node_controller = cluster.create_node(ip='1.1.1.1')
 # node_controller.max_cores.value = 32
 # node_controller.cache_size.value = 10000
