@@ -82,7 +82,7 @@ class PxeManager(object):
         :param distro: what OS to install (see the global dict "distro" for valid options)
         :return:
         """
-        available_machines = self.host_manager.find_resources(field="state", value="idle")['_items']
+        available_machines = self.host_manager.find_resources(field="state", value="idle")
         filtered_machines = self.filter_resources_by_tags(available_machines, tags)
         if len(filtered_machines) < count:
             print "Oops...There are not enough free resources to fill your request."
@@ -161,7 +161,7 @@ class PxeManager(object):
         :param value:
         :return:
         """
-        resources = self.host_manager.find_resources(field=field, value=value)['_items']
+        resources = self.host_manager.find_resources(field=field, value=value)
         for resource in resources:
             system_name = resource['hostname']
             print "Freeing " + system_name
@@ -262,7 +262,7 @@ class PxeManager(object):
         reservation_dict = {'public': self.public_ip_reservation,
                             'private': self.private_ip_reservation}
         ip_manager = type_dict[ip_type]
-        free_addresses = ip_manager.find_resources(field="owner", value="")['_items']
+        free_addresses = ip_manager.find_resources(field="owner", value="")
         filtered_addresses = self.filter_resources_by_tags(free_addresses, tags)
         if len(filtered_addresses) < number_of_ips:
             print "Oops...There are not enough free IPs to fill your request."
@@ -292,7 +292,7 @@ class PxeManager(object):
         type_dict = {'public': self.public_ip_manager,
                      'private': self.private_ip_manager}
         ip_type = type_dict[ip_type]
-        resources = ip_type.find_resources(field=field, value=value)['_items']
+        resources = ip_type.find_resources(field=field, value=value)
         for resource in resources:
             address = resource['address']
             print "Freeing " + address
