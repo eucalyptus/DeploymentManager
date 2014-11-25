@@ -63,11 +63,8 @@ class ResourceManagerClient(object):
             raise RequestFailureException(deleted_resource)
 
     def find_resources(self, field, value):
-        query = self.endpoint + "?where=" + field + "==\"" + value + "\""
-        resource_request = requests.get(query, auth=self.auth)
-        if resource_request.status_code != 200:
-            raise RequestFailureException(resource_request)
-        return resource_request.json()
+        filtered_results = [resource for resource in self.get_all_resources() if resource[field] == value]
+        return filtered_results
 
     def get_all_resources(self):
         return requests.get(self.endpoint, auth=self.auth).json()["_items"]
