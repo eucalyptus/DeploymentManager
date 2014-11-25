@@ -72,8 +72,8 @@ def test_find_resources():
     client = ResourceManagerClient()
     field = 'some_field'
     value = 'some_value'
-    url = client.endpoint + "?where=" + field + "==" + urllib.quote("\"" + value + "\"")
-    response_body = "{}"
+    url = client.endpoint
+    response_body = "{\"_items\":[]}"
     httpretty.register_uri(httpretty.GET, url, body=response_body)
     client.find_resources(field, value)
 
