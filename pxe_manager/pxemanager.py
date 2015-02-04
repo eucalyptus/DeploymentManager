@@ -143,15 +143,19 @@ class PxeManager(object):
         sys_ip = self.cobbler.get_system(system_name)['interfaces']['eth0']['ip_address']
         if self.check_ssh(ip=sys_ip):
             if self.check_for_file_on_target(ip=sys_ip, file_name=self.file_name):
+                self.reservation_failed(system_name=system_name)
                 return False
             print "File presence not detected. Kickstart succeeded"
             data = json.dumps({'hostname': system_name, 'state': 'in_use'})
             self.host_manager.update_resource(data)
             return True
         else:
-            data = json.dumps({'hostname': system_name, 'owner': '', 'state': 'pxe_failed', 'job_id': ''})
-            self.host_manager.update_resource(data)
+            self.reservation_failed(system_name=system_name)
         return False
+
+    def reservation_failed(self, system_name):
+        data = json.dumps({'hostname': system_name, 'owner': '', 'state': 'pxe_failed', 'job_id': ''})
+        self.host_manager.update_resource(data)
 
     def free_machines(self, field, value):
         """
