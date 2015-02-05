@@ -92,8 +92,12 @@ class PxeManager(object):
             hostname = filtered_machines[i]['hostname']
             data = json.dumps({'hostname': hostname, 'owner': owner, 'state': 'pxe', 'job_id': job_id})
             self.host_manager.update_resource(data)
-            self.put_file_on_target(ip=self.cobbler.get_system(hostname)['interfaces']['eth0']['ip_address'],
-                                    file_name=self.file_name)
+            try:
+                self.put_file_on_target(ip=self.cobbler.get_system(hostname)['interfaces']['eth0']['ip_address'],
+                                        file_name=self.file_name)
+            except (BadHostKeyException, AuthenticationException, SSHException, socket.error):
+                    self.reservation_failed(system_name=hostname, state="needs_repair")
+                    self.make_host_reservation(owner=owner, count=1, job_id=job_id, distro=distro)
             print "kickstarting host: " + hostname
             self.host_reservation.append(hostname)
             self.kickstart_machine(system_name=hostname, distro=distro)
@@ -143,15 +147,19 @@ class PxeManager(object):
         sys_ip = self.cobbler.get_system(system_name)['interfaces']['eth0']['ip_address']
         if self.check_ssh(ip=sys_ip):
             if self.check_for_file_on_target(ip=sys_ip, file_name=self.file_name):
+                self.reservation_failed(system_name=system_name, state="pxe_failed")
                 return False
             print "File presence not detected. Kickstart succeeded"
             data = json.dumps({'hostname': system_name, 'state': 'in_use'})
             self.host_manager.update_resource(data)
             return True
         else:
-            data = json.dumps({'hostname': system_name, 'owner': '', 'state': 'pxe_failed', 'job_id': ''})
-            self.host_manager.update_resource(data)
+            self.reservation_failed(system_name=system_name, state="pxe_failed")
         return False
+
+    def reservation_failed(self, system_name, state):
+        data = json.dumps({'hostname': system_name, 'owner': '', 'state': state, 'job_id': ''})
+        self.host_manager.update_resource(data)
 
     def free_machines(self, field, value):
         """
