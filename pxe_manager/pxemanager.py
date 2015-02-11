@@ -132,7 +132,7 @@ class PxeManager(object):
         self.cobbler.modify_system(system_handle, "netboot-enabled", 1, self.token)
         self.cobbler.save_system(system_handle, self.token)
 
-        reboot_args = {"power": "reboot", "systems": [system_name]}
+        reboot_args = {"power": "reboot", "systems": [simplehost]}
         self.cobbler.background_power_system(reboot_args, self.token)
         return
 
