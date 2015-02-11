@@ -250,7 +250,7 @@ class PxeManager(object):
         """
         reservation_ips = []
         for item in reservation:
-            simplehost = self.cobbler.find_system({"hostname":hostname})[0]
+            simplehost = self.cobbler.find_system({"hostname":item})[0]
             reservation_ips.append(self.cobbler.get_system(simplehost)['interfaces']['eth0']['ip_address'])
         return reservation_ips
 
