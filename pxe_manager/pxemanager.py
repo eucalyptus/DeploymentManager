@@ -92,7 +92,7 @@ class PxeManager(object):
             hostname = filtered_machines[i]['hostname']
             data = json.dumps({'hostname': hostname, 'owner': owner, 'state': 'pxe', 'job_id': job_id})
             self.host_manager.update_resource(data)
-            simplehost = self.cobbler.find_system({"hostname":hostname})[0]
+            simplehost = self.cobbler.find_system({"hostname": hostname})[0]
             try:
                 self.put_file_on_target(ip=self.cobbler.get_system(simplehost)['interfaces']['eth0']['ip_address'],
                                         file_name=self.file_name)
@@ -126,7 +126,7 @@ class PxeManager(object):
         :param distro:
         :return:
         """
-        simplehost = self.cobbler.find_system({"hostname":system_name})[0]
+        simplehost = self.cobbler.find_system({"hostname": system_name})[0]
         system_handle = self.cobbler.get_system_handle(simplehost, self.token)
         self.cobbler.modify_system(system_handle, "profile", self.distro[distro], self.token)
         self.cobbler.modify_system(system_handle, "netboot-enabled", 1, self.token)
@@ -146,7 +146,7 @@ class PxeManager(object):
         :param system_name: name of the system to check
         :return:
         """
-        simplehost = self.cobbler.find_system({"hostname":system_name})[0]
+        simplehost = self.cobbler.find_system({"hostname": system_name})[0]
         sys_ip = self.cobbler.get_system(simplehost)['interfaces']['eth0']['ip_address']
         if self.check_ssh(ip=sys_ip):
             if self.check_for_file_on_target(ip=sys_ip, file_name=self.file_name):
@@ -250,7 +250,7 @@ class PxeManager(object):
         """
         reservation_ips = []
         for item in reservation:
-            simplehost = self.cobbler.find_system({"hostname":item})[0]
+            simplehost = self.cobbler.find_system({"hostname": item})[0]
             reservation_ips.append(self.cobbler.get_system(simplehost)['interfaces']['eth0']['ip_address'])
         return reservation_ips
 
