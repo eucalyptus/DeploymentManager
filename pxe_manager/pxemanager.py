@@ -92,8 +92,9 @@ class PxeManager(object):
             hostname = filtered_machines[i]['hostname']
             data = json.dumps({'hostname': hostname, 'owner': owner, 'state': 'pxe', 'job_id': job_id})
             self.host_manager.update_resource(data)
+            simplehost = self.cobbler.find_system({"hostname": hostname})[0]
             try:
-                self.put_file_on_target(ip=self.cobbler.get_system(hostname)['interfaces']['eth0']['ip_address'],
+                self.put_file_on_target(ip=self.cobbler.get_system(simplehost)['interfaces']['eth0']['ip_address'],
                                         file_name=self.file_name)
             except (BadHostKeyException, AuthenticationException, SSHException, socket.error):
                     self.reservation_failed(system_name=hostname, state="needs_repair")
@@ -125,12 +126,13 @@ class PxeManager(object):
         :param distro:
         :return:
         """
-        system_handle = self.cobbler.get_system_handle(system_name, self.token)
+        simplehost = self.cobbler.find_system({"hostname": system_name})[0]
+        system_handle = self.cobbler.get_system_handle(simplehost, self.token)
         self.cobbler.modify_system(system_handle, "profile", self.distro[distro], self.token)
         self.cobbler.modify_system(system_handle, "netboot-enabled", 1, self.token)
         self.cobbler.save_system(system_handle, self.token)
 
-        reboot_args = {"power": "reboot", "systems": [system_name]}
+        reboot_args = {"power": "reboot", "systems": [simplehost]}
         self.cobbler.background_power_system(reboot_args, self.token)
         return
 
@@ -144,7 +146,8 @@ class PxeManager(object):
         :param system_name: name of the system to check
         :return:
         """
-        sys_ip = self.cobbler.get_system(system_name)['interfaces']['eth0']['ip_address']
+        simplehost = self.cobbler.find_system({"hostname": system_name})[0]
+        sys_ip = self.cobbler.get_system(simplehost)['interfaces']['eth0']['ip_address']
         if self.check_ssh(ip=sys_ip):
             if self.check_for_file_on_target(ip=sys_ip, file_name=self.file_name):
                 self.reservation_failed(system_name=system_name, state="pxe_failed")
@@ -247,7 +250,8 @@ class PxeManager(object):
         """
         reservation_ips = []
         for item in reservation:
-            reservation_ips.append(self.cobbler.get_system(item)['interfaces']['eth0']['ip_address'])
+            simplehost = self.cobbler.find_system({"hostname": item})[0]
+            reservation_ips.append(self.cobbler.get_system(simplehost)['interfaces']['eth0']['ip_address'])
         return reservation_ips
 
     def make_ip_reservation(self, ip_type, job_id, number_of_ips, tags=None):
