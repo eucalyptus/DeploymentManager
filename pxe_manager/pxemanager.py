@@ -66,7 +66,7 @@ class PxeManager(object):
         self.distro = {'esxi51': 'qa-vmwareesxi51u0-x86_64',
                        'esxi50': 'qa-vmwareesxi50u1-x86_64',
                        'centos': 'qa-centos6-x86_64-striped-drives',
-                       'rhel': 'qa-rhel6u5-x86_64-striped-drives'}
+                       'rhel': 'qa-rhel6u6-x86_64-striped-drives'}
         self.host_reservation = []
         self.file_name = 'kickstart.check'
         self.public_ip_reservation = []
