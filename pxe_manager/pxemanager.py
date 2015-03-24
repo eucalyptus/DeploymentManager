@@ -94,16 +94,16 @@ class PxeManager(object):
             hostname = filtered_machines[i]['hostname']
             print "INFO: reserving host", hostname
             data = json.dumps({'hostname': hostname, 'owner': owner, 'state': 'pxe', 'job_id': job_id})
-            print "INFO: updating host status to pxe"
+            print "INFO: updating", hostname, "status to pxe"
             self.host_manager.update_resource(data)
-            print "INFO: find host in Cobbler"
+            print "INFO: find", hostname, "in Cobbler"
             simplehost = self.cobbler.find_system({"hostname": hostname})[0]
             try:
-                print "INFO: Placing file on target host before kickstarting"
+                print "INFO: Placing file on", hostname, "before kickstarting"
                 self.put_file_on_target(ip=self.cobbler.get_system(simplehost)['interfaces']['eth0']['ip_address'],
                                         file_name=self.file_name)
             except (BadHostKeyException, AuthenticationException, SSHException, socket.error):
-                print "ERROR: could not reach host for preflight checks"
+                print "ERROR: could not reach", hostname, "for preflight checks"
                 self.reservation_failed(system_name=hostname, state="needs_repair")
                 print "INFO: reserving the next available host"
                 self.make_host_reservation(owner=owner, count=1, job_id=job_id, distro=distro)
@@ -120,7 +120,7 @@ class PxeManager(object):
         for resource in self.host_reservation:
             print "Checking status of " + resource
             if not self.is_system_ready(system_name=resource):
-                print "INFO: Host was not ready within allotted time. Removing host from reservation."
+                print "INFO:", hostname, "was not ready within allotted time. Removing host from reservation."
                 self.host_reservation.remove(resource)
                 print "INFO: Attempting to allocate another machine."
                 self.make_host_reservation(owner=owner, count=1, job_id=job_id, distro=distro)
@@ -136,7 +136,7 @@ class PxeManager(object):
         :param distro:
         :return:
         """
-        print "INFO: fetching system from Cobbler and setting profile"
+        print "INFO: fetching", system_name, "from Cobbler and setting profile"
         simplehost = self.cobbler.find_system({"hostname": system_name})[0]
         system_handle = self.cobbler.get_system_handle(simplehost, self.token)
         self.cobbler.modify_system(system_handle, "profile", self.distro[distro], self.token)
@@ -164,12 +164,13 @@ class PxeManager(object):
             if self.check_for_file_on_target(ip=sys_ip, file_name=self.file_name):
                 self.reservation_failed(system_name=system_name, state="pxe_failed")
                 return False
-            print "File that was created before kickstart was not detected.\nKICKSTART SUCCEEDED!"
+            print "File that was created on", system_name, "before kickstart was not detected.\nKICKSTART SUCCEEDED!"
             data = json.dumps({'hostname': system_name, 'state': 'in_use'})
-            print "INFO: updating host status to in_use"
+            print "INFO: updating", system_name, "status to in_use"
             self.host_manager.update_resource(data)
             return True
         else:
+            print "INFO: updating", system_name, "status to pxe_failed"
             self.reservation_failed(system_name=system_name, state="pxe_failed")
         return False
 
