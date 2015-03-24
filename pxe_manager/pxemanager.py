@@ -99,7 +99,7 @@ class PxeManager(object):
             print "INFO: finding", hostname, "in Cobbler"
             simplehost = self.cobbler.find_system({"hostname": hostname})[0]
             try:
-                print "INFO: Placing file on", hostname, "before kickstarting"
+                print "INFO: placing file on", hostname, "before kickstarting"
                 self.put_file_on_target(ip=self.cobbler.get_system(simplehost)['interfaces']['eth0']['ip_address'],
                                         file_name=self.file_name)
             except (BadHostKeyException, AuthenticationException, SSHException, socket.error):
@@ -122,7 +122,7 @@ class PxeManager(object):
             if not self.is_system_ready(system_name=resource):
                 print "INFO:", hostname, "was not ready within allotted time. Removing host from reservation."
                 self.host_reservation.remove(resource)
-                print "INFO: Attempting to allocate another machine."
+                print "INFO: attempting to allocate another machine."
                 self.make_host_reservation(owner=owner, count=1, job_id=job_id, distro=distro)
 
         print "Request fulfilled."
