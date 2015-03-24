@@ -92,11 +92,11 @@ class PxeManager(object):
 
         for i in range(count):
             hostname = filtered_machines[i]['hostname']
-            print "INFO: reserving host", hostname
+            print "INFO: using host", hostname
             data = json.dumps({'hostname': hostname, 'owner': owner, 'state': 'pxe', 'job_id': job_id})
             print "INFO: updating", hostname, "status to pxe"
             self.host_manager.update_resource(data)
-            print "INFO: find", hostname, "in Cobbler"
+            print "INFO: finding", hostname, "in Cobbler"
             simplehost = self.cobbler.find_system({"hostname": hostname})[0]
             try:
                 print "INFO: Placing file on", hostname, "before kickstarting"
@@ -109,7 +109,7 @@ class PxeManager(object):
                 self.make_host_reservation(owner=owner, count=1, job_id=job_id, distro=distro)
             print "INFO: adding host",hostname,"to the reservation"
             self.host_reservation.append(hostname)
-            print "INFO: kickstarting host: ", hostname
+            print "INFO: kickstarting host:", hostname
             self.kickstart_machine(system_name=hostname, distro=distro)
 
         '''
