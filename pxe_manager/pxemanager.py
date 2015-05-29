@@ -63,10 +63,8 @@ class PxeManager(object):
         self.private_ip_manager = private_ip_manager_client
         self.ssh_user = ssh_user
         self.ssh_password = ssh_password
-        self.distro = {'esxi51': 'qa-vmwareesxi51u0-x86_64',
-                       'esxi50': 'qa-vmwareesxi50u1-x86_64',
-                       'centos': 'qa-centos6-x86_64-striped-drives',
-                       'rhel': 'qa-rhel6u6-x86_64-striped-drives'}
+        self.distro = {'centos': 'centos6-x86_64-raid0',
+                       'rhel': 'rhel6u6-x86_64-raid0'}
         self.host_reservation = []
         self.file_name = 'kickstart.check'
         self.public_ip_reservation = []
@@ -100,14 +98,14 @@ class PxeManager(object):
             simplehost = self.cobbler.find_system({"hostname": hostname})[0]
             try:
                 print "INFO: placing file on", hostname, "before kickstarting"
-                self.put_file_on_target(ip=self.cobbler.get_system(simplehost)['interfaces']['eth0']['ip_address'],
+                self.put_file_on_target(ip=self.cobbler.get_system(simplehost)['interfaces']['em1']['ip_address'],
                                         file_name=self.file_name)
             except (BadHostKeyException, AuthenticationException, SSHException, socket.error):
                 print "ERROR: could not reach", hostname, "for preflight checks"
                 self.reservation_failed(system_name=hostname, state="needs_repair")
                 print "INFO: reserving the next available host"
                 self.make_host_reservation(owner=owner, count=1, job_id=job_id, distro=distro)
-            print "INFO: adding host",hostname,"to the reservation"
+            print "INFO: adding host", hostname, "to the reservation"
             self.host_reservation.append(hostname)
             print "INFO: kickstarting host:", hostname
             self.kickstart_machine(system_name=hostname, distro=distro)
@@ -159,7 +157,7 @@ class PxeManager(object):
         :return:
         """
         simplehost = self.cobbler.find_system({"hostname": system_name})[0]
-        sys_ip = self.cobbler.get_system(simplehost)['interfaces']['eth0']['ip_address']
+        sys_ip = self.cobbler.get_system(simplehost)['interfaces']['em1']['ip_address']
         if self.check_ssh(ip=sys_ip):
             if self.check_for_file_on_target(ip=sys_ip, file_name=self.file_name):
                 self.reservation_failed(system_name=system_name, state="pxe_failed")
@@ -265,7 +263,7 @@ class PxeManager(object):
         reservation_ips = []
         for item in reservation:
             simplehost = self.cobbler.find_system({"hostname": item})[0]
-            reservation_ips.append(self.cobbler.get_system(simplehost)['interfaces']['eth0']['ip_address'])
+            reservation_ips.append(self.cobbler.get_system(simplehost)['interfaces']['em1']['ip_address'])
         return reservation_ips
 
     def make_ip_reservation(self, ip_type, job_id, number_of_ips, tags=None):
