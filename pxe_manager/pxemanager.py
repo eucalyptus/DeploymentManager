@@ -108,13 +108,15 @@ class PxeManager(object):
                 print "INFO: reserving the next available host"
                 self.make_host_reservation(owner=owner, count=1, job_id=job_id, distro=distro)
             print "INFO: adding host", hostname, "to the reservation"
-            self.host_reservation.append(hostname)
+            if hostname not in self.host_reservation:
+                self.host_reservation.append(hostname)
             print "INFO: kickstarting host:", hostname
             self.kickstart_machine(system_name=hostname, distro=distro)
 
         '''
         Check that the resources in the reservation are ready
         '''
+        print "The reservation is for hosts ", self.host_reservation
         print "Waiting 2 minutes for systems to boot"
         sleep(120)
         for resource in self.host_reservation:
