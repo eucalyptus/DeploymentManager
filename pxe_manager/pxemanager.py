@@ -102,16 +102,16 @@ class PxeManager(object):
                 print "INFO: placing file on", hostname, "before kickstarting"
                 self.put_file_on_target(ip=self.cobbler.get_system(simplehost)['interfaces']['em1']['ip_address'],
                                         file_name=self.file_name)
+                print "INFO: adding host", hostname, "to the reservation"
+                if hostname not in self.host_reservation:
+                    self.host_reservation.append(hostname)
+                print "INFO: kickstarting host:", hostname
+                self.kickstart_machine(system_name=hostname, distro=distro)
             except (BadHostKeyException, AuthenticationException, SSHException, socket.error):
                 print "ERROR: could not reach", hostname, "for preflight checks"
                 self.reservation_failed(system_name=hostname, state="needs_repair")
                 print "INFO: reserving the next available host"
                 self.make_host_reservation(owner=owner, count=1, job_id=job_id, distro=distro)
-            print "INFO: adding host", hostname, "to the reservation"
-            if hostname not in self.host_reservation:
-                self.host_reservation.append(hostname)
-            print "INFO: kickstarting host:", hostname
-            self.kickstart_machine(system_name=hostname, distro=distro)
 
         '''
         Check that the resources in the reservation are ready
