@@ -64,7 +64,9 @@ class PxeManager(object):
         self.ssh_user = ssh_user
         self.ssh_password = ssh_password
         self.distro = {'centos': 'centos6-x86_64-raid0',
-                       'rhel': 'rhel6u6-x86_64-raid0'}
+                       'rhel': 'rhel6u6-x86_64-raid0',
+                       'centos7': 'centos7-x86_64-raid0',
+                       'rhel7': 'rhel7-x86_64-raid0'}
         self.host_reservation = []
         self.file_name = 'kickstart.check'
         self.public_ip_reservation = []

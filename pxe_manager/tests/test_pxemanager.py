@@ -21,7 +21,9 @@ def test_defaults():
                         </methodResponse>
     '''
     distro_map = {'centos': 'centos6-x86_64-raid0',
-                  'rhel': 'rhel6u6-x86_64-raid0'}
+                  'rhel': 'rhel6u6-x86_64-raid0',
+                  'centos7': 'centos7-x86_64-raid0',
+                  'rhel7': 'rhel7-x86_64-raid0'}
     httpretty.register_uri(httpretty.POST, cobbler_url,
                            body=response_body)
     pxe_manager = PxeManager(cobbler_url, cobbler_user, cobbler_password, host_client, pub_ip_client, priv_ip_client)
