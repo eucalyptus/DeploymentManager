@@ -66,6 +66,7 @@ class PxeManager(object):
         self.distro = {'centos': 'centos6-x86_64-raid0',
                        'rhel': 'rhel6u6-x86_64-raid0',
                        'centos7': 'centos7-x86_64-raid0',
+                       'centos70': 'centos7u0-x86_64-raid0',
                        'rhel7': 'rhel7-x86_64-raid0'}
         self.host_reservation = []
         self.file_name = 'kickstart.check'
