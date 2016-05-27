@@ -21,7 +21,9 @@ def test_defaults():
                         </methodResponse>
     '''
     distro_map = {'centos': 'centos6-x86_64-raid0',
-                  'rhel': 'rhel6u6-x86_64-raid0',
+                  'rhel': 'rhel6-x86_64-raid0',
+                  'centos6u7': 'centos6u7-x86_64-raid0',
+                  'rhel6u7': 'rhel6u7-x86_64-raid0',
                   'centos7': 'centos7-x86_64-raid0',
                   'centos70': 'centos7u0-x86_64-raid0',
                   'rhel7': 'rhel7-x86_64-raid0'}
