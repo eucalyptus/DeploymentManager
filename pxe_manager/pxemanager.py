@@ -125,7 +125,7 @@ class PxeManager(object):
         for resource in self.host_reservation:
             print "Checking status of " + resource
             if not self.is_system_ready(system_name=resource):
-                print "INFO:", hostname, "was not ready within allotted time. Removing host from reservation."
+                print "INFO:", resource, "was not ready within allotted time. Removing host from reservation."
                 self.host_reservation.remove(resource)
                 print "INFO: attempting to allocate another machine."
                 self.make_host_reservation(owner=owner, count=1, job_id=job_id, distro=distro)
