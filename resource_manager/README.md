@@ -19,6 +19,7 @@ Installation
 * Clone this repository
 * Install python dependencies: ```pip install Flask Flask-Bootstrap eve PrettyTable argparse requests```
 * Run the server: ```cd resource_manager;./server.py```
+* (If running in a virtualenv, run the command: ```. venv/bin/activate; cd resource_manager; python server.py```)
 
 
 Data Layout in DB
