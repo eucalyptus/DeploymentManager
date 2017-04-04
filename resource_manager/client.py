@@ -39,6 +39,17 @@ class ResourceManagerClient(object):
         return requests.get(url, auth=self.auth).json()
 
     def update_resource(self, resource):
+        '''
+        This function will perform a PATCH which does NOT delete empty dicts,
+        and often doesn't properly change dicts in the database
+        (read: http://stackoverflow.com/questions/41596053/python-eve-how-to-replace-a-dict-with-a-patch-request )
+        For this reason we have added a put_resource function below for
+        replacing the entire resource. If you are not updating the 'tags'
+        subdocument, you probably want to use this function, but if you want to
+        update 'tags, use 'put_resource()'.
+        :param resource:
+        :return:
+        '''
         resource_name = json.loads(resource)[self.key]
         server_response = self.get_resource(resource_name)
         identifier = server_response['_id']
@@ -47,6 +58,27 @@ class ResourceManagerClient(object):
         headers = self.headers
         headers['If-Match'] = etag
         updated_resource = requests.patch(request_url, data=resource, headers=self.headers, auth=self.auth)
+        if updated_resource.status_code != 200:
+            raise RequestFailureException(updated_resource)
+
+    def put_resource(self, resource):
+        '''
+        This function will perform a PUT because Eve doesn't always handle
+        PATCH requests properly
+        (read: http://stackoverflow.com/questions/41596053/python-eve-how-to-replace-a-dict-with-a-patch-request )
+        If you are not updating the 'tags' subdocument, you probably want to
+        use 'update_resource()'.
+        :param resource:
+        :return:
+        '''
+        resource_name = json.loads(resource)[self.key]
+        server_response = self.get_resource(resource_name)
+        identifier = server_response['_id']
+        etag = server_response['_etag']
+        request_url = self.endpoint + "/" + identifier
+        headers = self.headers
+        headers['If-Match'] = etag
+        updated_resource = requests.put(request_url, data=resource, headers=self.headers, auth=self.auth)
         if updated_resource.status_code != 200:
             raise RequestFailureException(updated_resource)
 
