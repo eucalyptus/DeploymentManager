@@ -20,7 +20,7 @@ except ImportError:
     from distutils.core import setup
 
 setup(name='deploymentmanager',
-      version='0.1',
+      version='0.2',
       description='Eucalyptus Deployment and Configuration Management tools',
       url='https://github.com/eucalyptus/DeploymentManager.git',
       license='Apache License 2.0',
