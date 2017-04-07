@@ -12,6 +12,29 @@ Quick Start - CentOS 6
 * Download the [cookbook tarball](https://github.com/viglesiasce/resource-manager-cookbook/releases/download/0.2.0/resource-man-cookbooks.tgz)
 * Run Chef: ```chef-solo -r resource-man-cookbooks.tgz -o 'recipe[resource-manager]'```
 
+Managing the Server
+------
+As seen in the above cookbook, the server.py is run via supervisord.  This
+means the log output is collected in supervisor logs, located in
+/var/log/supervisor/, example:
+
+    [root@localhost DeploymentManager]# tail /var/log/supervisor/resource-manager-api-stderr---supervisor-MLLTh7.log
+    10.111.4.180 - - [06/Apr/2017 07:41:01] "GET /machines HTTP/1.1" 200 -
+    10.111.4.181 - - [06/Apr/2017 07:49:12] "GET /machines HTTP/1.1" 200 -
+    10.111.4.181 - - [06/Apr/2017 07:49:13] "GET /machines HTTP/1.1" 200 -
+    10.111.4.180 - - [06/Apr/2017 07:51:02] "GET /machines HTTP/1.1" 200 -
+    10.5.1.14 - - [06/Apr/2017 07:57:06] "GET /machines/a-15-r.qa1.eucalyptus-systems.com HTTP/1.1" 200 -
+    10.5.1.14 - - [06/Apr/2017 07:57:06] "PUT /machines/577431f2421aa904db05a7df HTTP/1.1" 422 -
+    10.5.1.14 - - [06/Apr/2017 07:57:52] "GET /machines/a-15-r.qa1.eucalyptus-systems.com HTTP/1.1" 200 -
+    10.5.1.14 - - [06/Apr/2017 07:57:52] "PUT /machines/577431f2421aa904db05a7df HTTP/1.1" 200 -
+    10.5.1.14 - - [06/Apr/2017 07:58:03] "GET /machines/a-15-r.qa1.eucalyptus-systems.com HTTP/1.1" 200 -
+    10.111.4.180 - - [06/Apr/2017 08:01:01] "GET /machines HTTP/1.1" 200 -
+
+To start or stop the server run 'supervisorctl', example showing status here:
+
+    [root@localhost DeploymentManager]# supervisorctl status resource-manager-api
+    resource-manager-api             RUNNING   pid 12552, uptime 1:01:59
+
 Installation
 ------
 * [Install MongoDB](http://www.mongodb.org/downloads)
