@@ -30,9 +30,11 @@
 #
 # Author: Tony Beckham tony@eucalyptus.com
 #
+import json
+import operator
+import random
 import socket
 import xmlrpclib
-import json
 
 from time import sleep
 from paramiko import BadHostKeyException, AuthenticationException, SSHException, SSHClient, AutoAddPolicy
@@ -86,10 +88,15 @@ class PxeManager(object):
         print "INFO: fetching list of idle hosts"
         available_machines = self.host_manager.find_resources(field="state", value="idle")
         print "INFO: applying tag filter to available host list"
-        filtered_machines = self.filter_resources_by_tags(available_machines, tags)
+        filtered_machines = self.filter_hosts_by_tags(available_machines, tags)
         if len(filtered_machines) < count:
             print "Oops...There are not enough free resources to fill your request."
             raise UnableToFullfillRequestException()
+        print "INFO: Found {} machines that meet the requested attribute " \
+              "requirements".format(len(filtered_machines))
+
+        print "INFO: Randomizing filtered machines list"
+        random.shuffle(filtered_machines)
 
         for i in range(count):
             hostname = filtered_machines[i]['hostname']
@@ -271,6 +278,17 @@ class PxeManager(object):
             reservation_ips.append(self.cobbler.get_system(simplehost)['interfaces']['em1']['ip_address'])
         return reservation_ips
 
+    def get_individual_reservation_as_ip(self, reservation):
+        """
+        Look up single reservation hostname and return IP from cobbler server
+        :param reservation:
+        :return: single IP as string
+        """
+        reservation_ip = None
+        simplehost = self.cobbler.find_system({"hostname": reservation})[0]
+        reservation_ip = self.cobbler.get_system(simplehost)['interfaces']['em1']['ip_address']
+        return reservation_ip
+
     def make_ip_reservation(self, ip_type, job_id, number_of_ips, tags=None):
         """
         Used to make a reservation of public or private IPs.  Typically the job_id would be the jenkins job or some
@@ -349,4 +367,50 @@ class PxeManager(object):
                     all_tags_valid = False
             if all_tags_valid:
                 matching_resources.append(resource)
+        return matching_resources
+
+    def compare_tag(self, name, value, oper, tags):
+        """
+        Utility function to simplify the testing of key/value pairs in filtering
+        function.
+        :param name: Name of the key/value pair to compare
+        :param value: Value to compare
+        :param oper: what is our operation?
+        :param tags: tags from the host entry in the mongodb
+        :return:
+        """
+        # we will use a 10% fudge factor because memory is not exact
+        if 'memory' in name:
+            value *= .9
+        if name in tags and oper(tags[name], value):
+            #print ("{} {} {} {}".format(name, value, oper, tags[name]))
+            return True
+        return False
+
+    def filter_hosts_by_tags(self, resources, tags):
+        """
+        Filter out the resources that meet the tag requirements. When
+        comparing integers such as memory or cpucores, we will compare
+        greater than or equal to (Memory is not exact when it comes to byte
+        count so we test that it is greater than or equal to a close
+        proximity of GB, i.e. 67258503167 is just under 64GB, and if you ask
+        for 4 cpucores we will give you machines with 4 or 8.)
+        :param resources: available resources from mongodb
+        :param tags: tags that we are filtering against
+        :return: list of dicts
+        """
+        matching_resources = []
+        oper = operator.eq
+        for r in resources:
+            found = True
+            for name, filters in tags.iteritems():
+                if isinstance(filters, int):
+                    oper = operator.ge
+                if not self.compare_tag(name, value=filters,
+                                        oper=oper, tags=r['tags']):
+                    found = False
+                    break
+            if found:
+                #print "adding {} to matching list".format(r['hostname'])
+                matching_resources.append(r)
         return matching_resources
