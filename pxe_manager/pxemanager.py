@@ -383,7 +383,6 @@ class PxeManager(object):
         if 'memory' in name:
             value *= .9
         if name in tags and oper(tags[name], value):
-            #print ("{} {} {} {}".format(name, value, oper, tags[name]))
             return True
         return False
 
@@ -411,6 +410,5 @@ class PxeManager(object):
                     found = False
                     break
             if found:
-                #print "adding {} to matching list".format(r['hostname'])
                 matching_resources.append(r)
         return matching_resources
