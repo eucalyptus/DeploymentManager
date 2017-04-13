@@ -141,7 +141,7 @@ class PxeManager(object):
                 print "INFO:", resource, "was not ready within allotted time. Removing host from reservation."
                 self.host_reservation.remove(resource)
                 print "INFO: attempting to allocate another machine."
-                self.make_host_reservation(owner=owner, count=1, job_id=job_id, distro=distro)
+                self.make_host_reservation(owner=owner, count=1, job_id=job_id, distro=distro, tags=tags)
 
         print "Request fulfilled."
         return
