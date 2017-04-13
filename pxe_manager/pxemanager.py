@@ -87,8 +87,12 @@ class PxeManager(object):
         """
         print "INFO: fetching list of idle hosts"
         available_machines = self.host_manager.find_resources(field="state", value="idle")
+        print "INFO: Found {} total machines available".format(
+            len(available_machines))
         print "INFO: applying tag filter to available host list"
         filtered_machines = self.filter_hosts_by_tags(available_machines, tags)
+        print "INFO: Found {} machines that meet the requested attribute " \
+              "requirements".format(len(filtered_machines))
         if len(filtered_machines) < count and \
                 len(filtered_machines) < len(available_machines):
             print "Oops...There are not enough free resources with the "\
@@ -98,8 +102,6 @@ class PxeManager(object):
         elif len(filtered_machines) < count:
             print "Oops...There are not enough free resources to fill your request."
             raise UnableToFullfillRequestException()
-        print "INFO: Found {} machines that meet the requested attribute " \
-              "requirements".format(len(filtered_machines))
 
         print "INFO: Randomizing filtered machines list"
         random.shuffle(filtered_machines)
