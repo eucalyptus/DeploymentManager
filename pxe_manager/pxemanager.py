@@ -119,7 +119,7 @@ class PxeManager(object):
                 print "ERROR: could not reach", hostname, "for preflight checks"
                 self.reservation_failed(system_name=hostname, state="needs_repair")
                 print "INFO: reserving the next available host"
-                self.make_host_reservation(owner=owner, count=1, job_id=job_id, distro=distro)
+                self.make_host_reservation(owner=owner, count=1, job_id=job_id, distro=distro, tags=tags)
 
         '''
         Check that the resources in the reservation are ready
