@@ -89,7 +89,13 @@ class PxeManager(object):
         available_machines = self.host_manager.find_resources(field="state", value="idle")
         print "INFO: applying tag filter to available host list"
         filtered_machines = self.filter_hosts_by_tags(available_machines, tags)
-        if len(filtered_machines) < count:
+        if len(filtered_machines) < count and \
+                len(filtered_machines) < len(available_machines):
+            print "Oops...There are not enough free resources with the "\
+                    "attributes you requested. You might need to "\
+                    "reduce your attribute requirements."
+            raise UnableToFullfillRequestException()
+        elif len(filtered_machines) < count:
             print "Oops...There are not enough free resources to fill your request."
             raise UnableToFullfillRequestException()
         print "INFO: Found {} machines that meet the requested attribute " \
