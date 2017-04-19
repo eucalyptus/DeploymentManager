@@ -13,14 +13,14 @@ from resource_manager.client import ResourceManagerClient
 # newhosts is a json formatted file of hosts and memory collected from nephoria
 # newhosts looks like this (for future reference):
 # (venv) [mbacchi@centos7 resource_manager]$ cat /home/mbacchi/repos/nephoria/newhosts.json | jq
-#{
-#  "hosts": {
-#    "a-01-l.qa1.eucalyptus-systems.com": "131823348",
-#    "a-36.qa1.eucalyptus-systems.com": "16255048",
-#    "a-37.qa1.eucalyptus-systems.com": "16255048",
-# ...
+# {
+#   "hosts": {
+#     "a-01-l.qa1.eucalyptus-systems.com": "131823348",
+#     "a-36.qa1.eucalyptus-systems.com": "16255048",
+#     "a-37.qa1.eucalyptus-systems.com": "16255048",
+#  ...
+#  }
 # }
-#}
 newhosts = "/home/mbacchi/repos/nephoria/newhosts.json"
 
 if __name__ == "__main__":
@@ -52,11 +52,11 @@ if __name__ == "__main__":
     with open(newhosts, "r") as file:
         collected = json.loads(file.read())
 
-    #client = ResourceManagerClient(endpoint="http://10.111.4.100:5000")  #  PRODUCTION
-    client = ResourceManagerClient(endpoint="http://127.0.0.1:5000") # USE "http://10.111.4.100:5000" for production
+    # client = ResourceManagerClient(endpoint="http://10.111.4.100:5000")  #  PRODUCTION
+    client = ResourceManagerClient(endpoint="http://127.0.0.1:5000")  # USE "http://10.111.4.100:5000" for production
     ourlist = client.get_all_resources()
     for item in ourlist:
-        machine = client.get_resource(item['hostname'])  #  PRODUCTION
+        machine = client.get_resource(item['hostname'])  # PRODUCTION
         for mtype in memtable:
             match = re.search(memtable[mtype]['regex'], item['hostname'])
             if match:
@@ -67,26 +67,26 @@ if __name__ == "__main__":
                         item['hostname'],
                         int(collected['hosts'][item['hostname']])*1024,
                         memtable[mtype]['mem'])
-                    machine[u'tags'][u'memory'] = int(collected['hosts'][item['hostname']])*1024  #  PRODUCTION
+                    machine[u'tags'][u'memory'] = int(collected['hosts'][item['hostname']])*1024  # PRODUCTION
                 else:
                     print "{}: updating to {} (table)".format(item['hostname'],
                                                               memtable[mtype]['mem'])
-                    machine[u'tags'][u'memory'] = memtable[mtype]['mem']  #  PRODUCTION
+                    machine[u'tags'][u'memory'] = memtable[mtype]['mem']  # PRODUCTION
                 if 'cpucores' in memtable[mtype].keys():
                     print "cpucores: {}".format(memtable[mtype]['cpucores'])
-                    machine[u'tags'][u'cpucores'] = memtable[mtype]['cpucores']  #  PRODUCTION
+                    machine[u'tags'][u'cpucores'] = memtable[mtype]['cpucores']  # PRODUCTION
                 if 'cpumhz' in memtable[mtype].keys():
                     print "cpumhz: {}".format(memtable[mtype]['cpumhz'])
-                    machine[u'tags'][u'cpumhz'] = memtable[mtype]['cpumhz']  #  PRODUCTION
+                    machine[u'tags'][u'cpumhz'] = memtable[mtype]['cpumhz']  # PRODUCTION
                 if 'interfaces' in memtable[mtype].keys():
                     for i in memtable[mtype]['interfaces']:
                         print "interface: {} mbps".format(i['ratembps'])
-                    machine[u'tags'][u'interfaces'] = memtable[mtype]['interfaces']  #  PRODUCTION
-        machine.pop('_updated')  #  PRODUCTION
-        machine.pop('_etag')  #  PRODUCTION
-        machine.pop('_created')  #  PRODUCTION
-        machine.pop('_links')  #  PRODUCTION
+                    machine[u'tags'][u'interfaces'] = memtable[mtype]['interfaces']  # PRODUCTION
+        machine.pop('_updated')  # PRODUCTION
+        machine.pop('_etag')  # PRODUCTION
+        machine.pop('_created')  # PRODUCTION
+        machine.pop('_links')  # PRODUCTION
         print "Performing client.put_resource(json.dumps({}))".format(item['hostname'])
 
         # WARNING!! - DON'T ENABLE THIS UNLESS YOU WANT TO UPDATE YOUR DB!!!!
-        #client.put_resource(json.dumps(machine))  #  PRODUCTION
+        # client.put_resource(json.dumps(machine))  # PRODUCTION
