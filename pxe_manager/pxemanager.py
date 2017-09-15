@@ -65,7 +65,7 @@ class PxeManager(object):
         self.private_ip_manager = private_ip_manager_client
         self.ssh_user = ssh_user
         self.ssh_password = ssh_password
-        self.distro = {'centos': 'centos7-x86_64-raid0',
+        self.distro = {'centos': 'centos7u3-x86_64-raid0',
                        'rhel': 'rhel7-x86_64-raid0',
                        'centos6u7': 'centos6u7-x86_64-raid0',
                        'rhel6u7': 'rhel6u7-x86_64-raid0',
